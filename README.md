@@ -1,17 +1,17 @@
 # tui-jeu
 
-Jeux en mode terminal construits avec le composant **Symfony TUI**.
+Terminal games built with the **Symfony TUI** component.
 
 > [!WARNING]
-> **Le composant `symfony/tui` est expérimental et sa PR est en attente de review.**
-> Il n'est pas encore fusionné dans Symfony. Voir : https://github.com/symfony/symfony-docs/pull/22201
+> **The `symfony/tui` component is experimental and its PR is pending review.**
+> It has not been merged into Symfony yet. See: https://github.com/symfony/symfony-docs/pull/22201
 >
-> Ce projet embarque le composant en local via un dépôt `path` dans `composer.json`.
-> Suivez le mode opératoire ci-dessous pour installer l'environnement.
+> This project embeds the component locally via a `path` repository in `composer.json`.
+> Follow the setup instructions below to get started.
 
 ---
 
-## Prérequis
+## Requirements
 
 - PHP ≥ 8.4
 - Composer
@@ -20,42 +20,42 @@ Jeux en mode terminal construits avec le composant **Symfony TUI**.
 ## Installation
 
 ```bash
-# 1. Cloner ce dépôt
-git clone <url-du-repo> tui-jeu
+# 1. Clone this repository
+git clone <repo-url> tui-jeu
 cd tui-jeu
 
-# 2. Récupérer le composant TUI depuis la PR en attente de review
+# 2. Fetch the TUI component from the pending PR branch
 git clone --branch tui --single-branch \
     https://github.com/fabpot/symfony.git \
     vendor-src/symfony
 
-# 3. Installer les dépendances (le composant TUI est chargé depuis vendor-src/ via un path repository)
+# 3. Install dependencies (the TUI component is loaded from vendor-src/ via a path repository)
 composer install
 ```
 
-> Le `composer.json` référence `vendor-src/symfony/src/Symfony/Component/Tui`
-> comme dépôt de type `path`, donc aucune modification supplémentaire n'est requise.
+> `composer.json` references `vendor-src/symfony/src/Symfony/Component/Tui`
+> as a `path` repository, so no further configuration is needed.
 
 ---
 
-## Jeux disponibles
+## Games
 
-| Commande | Description |
-|----------|-------------|
-| `php bin/console app:snake` | **Snake** — mangez les pommes, évitez les murs et votre queue. Vitesse croissante. |
-| `php bin/console app:park` | **Terminal Park** — gestion de parc d'attractions à la RollerCoaster Tycoon. Construisez des chemins, des attractions, gérez l'argent et le bonheur des visiteurs. |
-| `php bin/console app:space` | **Space Invaders** — défendez la Terre contre des vagues d'envahisseurs à sprites Unicode. |
+| Command | Description |
+|---------|-------------|
+| `php bin/console app:snake` | **Snake** — eat the apples, avoid the walls and your own tail. Speed increases over time. |
+| `php bin/console app:park` | **Terminal Park** — RollerCoaster Tycoon-style park management. Build paths and attractions, manage money and visitor happiness. |
+| `php bin/console app:space` | **Space Invaders** — defend Earth against waves of invaders rendered with Unicode block sprites. |
 
-### Contrôles communs
+### Common controls
 
-| Touche | Action |
-|--------|--------|
-| `Q` / `Ctrl+C` | Quitter |
-| `P` / `Espace` | Pause (selon le jeu) |
-| `R` | Recommencer (Snake, Space Invaders) |
+| Key | Action |
+|-----|--------|
+| `Q` / `Ctrl+C` | Quit |
+| `P` / `Space` | Pause (game-dependent) |
+| `R` | Restart (Snake, Space Invaders) |
 
 ---
 
 ## Contributing
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md).
