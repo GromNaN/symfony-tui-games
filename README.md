@@ -1,4 +1,4 @@
-# tui-jeu
+# Symfony TUI Games
 
 Terminal games built with the **Symfony TUI** component.
 
