@@ -252,14 +252,14 @@ class SpaceGame
             $this->formationOffsetX = $newOffsetX;
         }
 
-        // Check if any invader reached the player row → game over
+        // Check if any invader sprite (2 rows tall) reached the player row → game over
         for ($r = 0; $r < self::ROWS; ++$r) {
             for ($c = 0; $c < self::COLS; ++$c) {
                 if (!$this->invaders[$r][$c]) {
                     continue;
                 }
-                $iy = self::INVADER_START_Y + $r + $this->formationOffsetY;
-                if ($iy >= self::PLAYER_Y) {
+                $iy = $this->invaderY($r);
+                if ($iy + 1 >= self::PLAYER_Y) {
                     $this->state = GameState::GameOver;
 
                     return;
@@ -311,9 +311,10 @@ class SpaceGame
                 if (!$this->invaders[$r][$c]) {
                     continue;
                 }
-                $ix = self::INVADER_START_X + $c + $this->formationOffsetX;
-                $iy = self::INVADER_START_Y + $r + $this->formationOffsetY;
-                if ($ix === $bx && $iy === $by) {
+                $ix = $this->invaderX($c);
+                $iy = $this->invaderY($r);
+                // Sprite is 2 rows tall: top row iy, bottom row iy+1
+                if ($ix === $bx && ($iy === $by || $iy + 1 === $by)) {
                     $this->invaders[$r][$c] = false;
                     $this->score += $this->invaderPoints($r);
 
@@ -347,10 +348,26 @@ class SpaceGame
         }
 
         $chosen = $cols[array_rand($cols)];
-        $ix = self::INVADER_START_X + $chosen['c'] + $this->formationOffsetX;
-        $iy = self::INVADER_START_Y + $chosen['r'] + $this->formationOffsetY;
+        $ix = $this->invaderX($chosen['c']);
+        $iy = $this->invaderY($chosen['r']);
 
-        $this->invaderBullets[] = ['x' => $ix, 'y' => $iy + 1];
+        // Shoot from below the 2-row sprite
+        $this->invaderBullets[] = ['x' => $ix, 'y' => $iy + 2];
+    }
+
+    /** Logical x of invader column $c, including formation drift. */
+    public function invaderX(int $c): int
+    {
+        return self::INVADER_START_X + $c + $this->formationOffsetX;
+    }
+
+    /**
+     * Logical y of invader row $r (top of its 2-row sprite).
+     * Rows are spaced 2 apart so their sprites never overlap.
+     */
+    public function invaderY(int $r): int
+    {
+        return self::INVADER_START_Y + $r * 2 + $this->formationOffsetY;
     }
 
     private function playerHit(): void

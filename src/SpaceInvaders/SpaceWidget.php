@@ -91,23 +91,26 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             }
         }
 
-        // Invaders
+        // Invaders — each sprite is 2 terminal rows tall
         $invaders = $this->game->getInvaders();
-        $ox       = $this->game->getFormationOffsetX();
-        $oy       = $this->game->getFormationOffsetY();
 
         for ($r = 0; $r < SpaceGame::ROWS; ++$r) {
             for ($c = 0; $c < SpaceGame::COLS; ++$c) {
                 if (!($invaders[$r][$c] ?? false)) {
                     continue;
                 }
-                $ix = SpaceGame::INVADER_START_X + $c + $ox;
-                $iy = SpaceGame::INVADER_START_Y + $r + $oy;
-                if ($ix < 0 || $ix >= $W || $iy < 0 || $iy >= $H) {
-                    continue;
+                $ix  = $this->game->invaderX($c);
+                $iy  = $this->game->invaderY($r);
+                [$top, $bot, $color] = $this->invaderGlyph($r);
+
+                if ($ix >= 0 && $ix < $W) {
+                    if ($iy >= 0 && $iy < $H) {
+                        $grid[$iy][$ix] = $color.$top.self::R;
+                    }
+                    if ($iy + 1 >= 0 && $iy + 1 < $H) {
+                        $grid[$iy + 1][$ix] = $color.$bot.self::R;
+                    }
                 }
-                [$char, $color] = $this->invaderGlyph($r);
-                $grid[$iy][$ix] = $color.$char.self::R;
             }
         }
 
@@ -177,14 +180,22 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     // Helpers
     // -------------------------------------------------------------------------
 
-    /** @return array{string,string} [glyph2chars, ansiColor] */
+    /**
+     * Returns the 2-row sprite for an invader row.
+     *
+     * @return array{string, string, string} [topChars, botChars, ansiColor]
+     *
+     * Each string is exactly 2 terminal columns wide.
+     * Sprites use Unicode block characters (▀▄█▌▐) for a pixel-art look.
+     */
     private function invaderGlyph(int $row): array
     {
         return match ($row) {
-            0       => ['oo', self::C_RED],
-            1       => ['[]', self::C_YELLOW],
-            2       => ['()', self::C_CYAN],
-            default => ['<>', self::C_GREEN],
+            //        top   bot    colour
+            0       => ['╔╗', '╚╝', self::C_RED],     // boss  — box frame
+            1       => ['◄►', '▄▀', self::C_YELLOW],  // crab  — arrows + chin
+            2       => ['▀█', '▄ ', self::C_CYAN],    // squid — asymmetric
+            default => ['▄▄', '▀▀', self::C_GREEN],   // bug   — double band
         };
     }
 
