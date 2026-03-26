@@ -21,13 +21,11 @@ Terminal games built with the **Symfony TUI** component.
 
 ```bash
 # 1. Clone this repository
-git clone <repo-url> tui-jeu
-cd tui-jeu
+git clone https://github.com/GromNaN/symfony-tui-games.git symfony-tui-games
+cd symfony-tui-games
 
 # 2. Fetch the TUI component from the pending PR branch
-git clone --branch tui --single-branch \
-    https://github.com/fabpot/symfony.git \
-    vendor-src/symfony
+git clone --branch tui --single-branch https://github.com/fabpot/symfony.git vendor-src/symfony
 
 # 3. Install dependencies (the TUI component is loaded from vendor-src/ via a path repository)
 composer install
