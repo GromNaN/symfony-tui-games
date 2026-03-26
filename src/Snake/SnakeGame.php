@@ -8,7 +8,9 @@ class SnakeGame
     private array $snake;
 
     private Direction $direction;
-    private Direction $nextDirection;
+
+    /** @var list<Direction> Directions en attente, dépilées à chaque step (max 2) */
+    private array $directionQueue = [];
 
     /** @var array{int, int} */
     private array $food;
@@ -35,7 +37,7 @@ class SnakeGame
         ];
 
         $this->direction = Direction::Right;
-        $this->nextDirection = Direction::Right;
+        $this->directionQueue = [];
         $this->score = 0;
         $this->state = GameState::Playing;
         $this->spawnFood();
@@ -47,7 +49,7 @@ class SnakeGame
             return;
         }
 
-        $this->direction = $this->nextDirection;
+        $this->direction = array_shift($this->directionQueue) ?? $this->direction;
         [$hx, $hy] = $this->snake[0];
 
         [$nx, $ny] = match ($this->direction) {
@@ -86,8 +88,11 @@ class SnakeGame
 
     public function changeDirection(Direction $direction): void
     {
-        if ($direction !== $this->direction->opposite()) {
-            $this->nextDirection = $direction;
+        // La direction de référence est la dernière en file (ou la courante si la file est vide)
+        $lastDir = end($this->directionQueue) ?: $this->direction;
+
+        if ($direction !== $lastDir->opposite() && $direction !== $lastDir && \count($this->directionQueue) < 2) {
+            $this->directionQueue[] = $direction;
         }
     }
 
