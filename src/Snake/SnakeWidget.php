@@ -4,44 +4,49 @@ namespace App\Snake;
 
 use Symfony\Component\Tui\Input\Key;
 use Symfony\Component\Tui\Render\RenderContext;
+use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
 
+/**
+ * Snake game widget — renders only the cell grid (no border, no status bar).
+ *
+ * Border and focus highlight are declared in the StyleSheet (see SnakeCommand).
+ * The status bar lives in a sibling TextWidget managed by SnakeCommand.
+ */
 class SnakeWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
     use KeybindingsTrait;
 
-    // ANSI color codes
-    private const RESET      = "\033[0m";
-    private const GREEN      = "\033[32m";
-    private const GREEN_BOLD = "\033[1;32m";
-    private const RED        = "\033[31m";
-    private const YELLOW     = "\033[33m";
-    private const CYAN       = "\033[36m";
-    private const BOLD       = "\033[1m";
-    private const DIM        = "\033[2m";
-
-    // Border characters
-    private const TL = '╔';
-    private const TR = '╗';
-    private const BL = '╚';
-    private const BR = '╝';
-    private const H  = '═';
-    private const V  = '║';
+    // Cell styles — initialised once, reused every render().
+    private readonly Style $styleHead;
+    private readonly Style $styleBody;
+    private readonly Style $styleFood;
+    private readonly Style $styleOverlay;
+    private readonly Style $styleError;
 
     public function __construct(private readonly SnakeGame $game)
     {
+        $this->styleHead    = new Style(color: 'bright_green', bold: true);
+        $this->styleBody    = new Style(color: 'green');
+        $this->styleFood    = new Style(color: 'bright_red');
+        $this->styleOverlay = new Style(reverse: true, bold: true);
+        $this->styleError   = new Style(color: 'bright_red');
     }
+
+    // -------------------------------------------------------------------------
+    // Keybindings
+    // -------------------------------------------------------------------------
 
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'move_up'    => [Key::UP, 'w'],
-            'move_down'  => [Key::DOWN, 's'],
-            'move_left'  => [Key::LEFT, 'a'],
+            'move_up'    => [Key::UP,    'w'],
+            'move_down'  => [Key::DOWN,  's'],
+            'move_left'  => [Key::LEFT,  'a'],
             'move_right' => [Key::RIGHT, 'd'],
             'pause'      => ['p', Key::SPACE],
             'restart'    => ['r'],
@@ -69,139 +74,84 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Rendering  (inner content only — border handled by the Renderer)
+    // -------------------------------------------------------------------------
+
     public function render(RenderContext $context): array
     {
         $cols = $this->game->getCols();
         $rows = $this->game->getRows();
 
-        // Build a lookup map for the snake and food
+        if ($context->getColumns() < $cols * 2) {
+            return [$this->styleError->apply('Terminal too small!')];
+        }
+
+        // Build lookup structures for fast cell classification.
         $snakeBody = $this->game->getSnake();
-        $head = $snakeBody[0] ?? null;
-        $bodySet = [];
+        $head      = $snakeBody[0] ?? null;
+        $bodySet   = [];
         foreach (\array_slice($snakeBody, 1) as [$bx, $by]) {
             $bodySet["$bx,$by"] = true;
         }
         [$fx, $fy] = $this->game->getFood();
 
         $lines = [];
-
-        // Top border
-        $lines[] = self::DIM.self::TL.str_repeat(self::H, $cols * 2).self::TR.self::RESET;
-
-        // Game rows
         for ($y = 0; $y < $rows; ++$y) {
-            $row = self::DIM.self::V.self::RESET;
-
+            $row = '';
             for ($x = 0; $x < $cols; ++$x) {
-                if (null !== $head && $head[0] === $x && $head[1] === $y) {
-                    $row .= self::GREEN_BOLD.'██'.self::RESET;
-                } elseif (isset($bodySet["$x,$y"])) {
-                    $row .= self::GREEN.'██'.self::RESET;
-                } elseif ($x === $fx && $y === $fy) {
-                    $row .= self::RED.'██'.self::RESET;
-                } else {
-                    $row .= '  ';
-                }
+                $row .= match (true) {
+                    null !== $head && $head[0] === $x && $head[1] === $y => $this->styleHead->apply('██'),
+                    isset($bodySet["$x,$y"])                             => $this->styleBody->apply('██'),
+                    $x === $fx && $y === $fy                             => $this->styleFood->apply('██'),
+                    default                                               => '  ',
+                };
             }
-
-            $row .= self::DIM.self::V.self::RESET;
             $lines[] = $row;
         }
 
-        // Bottom border
-        $lines[] = self::DIM.self::BL.str_repeat(self::H, $cols * 2).self::BR.self::RESET;
-
-        // Status bar
-        $lines[] = $this->buildStatusLine($cols * 2 + 2);
-
-        // Overlay for Paused / Game Over
+        // Overlay for PAUSE / GAME OVER states.
         if (GameState::Playing !== $this->game->getState()) {
-            $lines = $this->applyOverlay($lines, $rows);
+            $lines = $this->applyOverlay($lines, $cols, $rows);
         }
 
         return $lines;
     }
 
+    // -------------------------------------------------------------------------
+    // Overlay
+    // -------------------------------------------------------------------------
+
     /** @param string[] $lines */
-    private function applyOverlay(array $lines, int $rows): array
+    private function applyOverlay(array $lines, int $cols, int $rows): array
     {
-        $state = $this->game->getState();
-        $cols = $this->game->getCols();
+        $texts = GameState::Paused === $this->game->getState()
+            ? ['', '  PAUSE  ', '  P to resume  ', '']
+            : ['', '  GAME OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  R to restart  ', ''];
 
-        if (GameState::Paused === $state) {
-            $overlayLines = [
-                '┌──────────────────┐',
-                '│      PAUSE       │',
-                '│  P pour reprendre│',
-                '└──────────────────┘',
-            ];
-        } else {
-            $overlayLines = [
-                '┌──────────────────┐',
-                '│    GAME  OVER    │',
-                '│  Score: '.str_pad((string) $this->game->getScore(), 9).'│',
-                '│  R pour rejouer  │',
-                '└──────────────────┘',
-            ];
-        }
+        $overlayH = \count($texts);
+        $overlayW = max(array_map('mb_strlen', $texts));
+        $startRow = (int) (($rows - $overlayH) / 2);
+        $startCol = (int) (($cols * 2 - $overlayW) / 2);
 
-        $overlayH = \count($overlayLines);
-        $overlayW = mb_strlen($overlayLines[0]);
-
-        // Center position in the grid area (rows 1..rows, cols 1..cols*2)
-        $startRow = 1 + (int) (($rows - $overlayH) / 2);
-        $startCol = 1 + (int) (($cols * 2 - $overlayW) / 2);
-
-        foreach ($overlayLines as $i => $overlayLine) {
+        foreach ($texts as $i => $text) {
             $lineIdx = $startRow + $i;
             if (!isset($lines[$lineIdx])) {
                 continue;
             }
 
-            $line = $lines[$lineIdx];
-            // Strip all ANSI from the line to manipulate it as plain text
-            $plain = preg_replace('/\033\[[0-9;]*m/', '', $line);
-            $before = mb_substr($plain, 0, $startCol);
-            $after = mb_substr($plain, $startCol + $overlayW);
+            // Pad the overlay text to a uniform width then style it.
+            $padded = mb_str_pad($text, $overlayW);
+            $styled = $this->styleOverlay->apply($padded);
 
-            $lines[$lineIdx] = self::CYAN.$before.self::BOLD.$overlayLine.self::RESET.self::CYAN.$after.self::RESET;
+            // Splice into the plain line at the correct column.
+            $plain  = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
+            $before = mb_substr((string) $plain, 0, $startCol);
+            $after  = mb_substr((string) $plain, $startCol + $overlayW);
+
+            $lines[$lineIdx] = $before.$styled.$after;
         }
 
         return $lines;
-    }
-
-    private function buildStatusLine(int $totalWidth): string
-    {
-        $score = $this->game->getScore();
-        $length = $this->game->getLength();
-        $state = $this->game->getState();
-
-        $stateLabel = match ($state) {
-            GameState::Playing => '',
-            GameState::Paused => self::YELLOW.' [PAUSE]'.self::RESET,
-            GameState::GameOver => self::RED.' [GAME OVER]'.self::RESET,
-        };
-
-        $left = self::BOLD.'Score: '.$score.self::RESET
-            .'  '.self::DIM.'Longueur: '.$length.self::RESET
-            .$stateLabel;
-
-        $hint = self::DIM.'↑↓←→ ou WASD · P pause · Q quitter'.self::RESET;
-
-        // Visible widths
-        $leftVisible = 'Score: '.$score.'  Longueur: '.$length;
-        if (GameState::Playing !== $state) {
-            $leftVisible .= match ($state) {
-                GameState::Paused => ' [PAUSE]',
-                GameState::GameOver => ' [GAME OVER]',
-                default => '',
-            };
-        }
-        $hintVisible = '↑↓←→ ou WASD · P pause · Q quitter';
-
-        $padding = $totalWidth - mb_strlen($leftVisible) - mb_strlen($hintVisible);
-        $padding = max(1, $padding);
-
-        return $left.str_repeat(' ', $padding).$hint;
     }
 }
