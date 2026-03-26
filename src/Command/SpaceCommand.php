@@ -16,9 +16,9 @@ use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
 
 #[AsCommand(name: 'app:space', description: 'Space Invaders')]
-final class SpaceCommand extends Command
+final class SpaceCommand
 {
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function __invoke(InputInterface $input, OutputInterface $output): int
     {
         $stylesheet = new StyleSheet([
             ':root' => new Style(

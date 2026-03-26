@@ -16,9 +16,9 @@ use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
 
 #[AsCommand(name: 'app:park', description: 'Jeu de gestion de parc d\'attractions')]
-final class ParkCommand extends Command
+final class ParkCommand
 {
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function __invoke(InputInterface $input, OutputInterface $output): int
     {
         $stylesheet = new StyleSheet([
             ':root' => new Style(

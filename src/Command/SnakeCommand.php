@@ -23,9 +23,9 @@ use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
 
 #[AsCommand(name: 'app:snake', description: 'Jeu de Snake dans le terminal')]
-final class SnakeCommand extends Command
+final class SnakeCommand
 {
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function __invoke(InputInterface $input, OutputInterface $output): int
     {
         $stylesheet = new StyleSheet([
             // Centre the root container in the terminal.
