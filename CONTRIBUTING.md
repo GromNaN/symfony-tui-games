@@ -101,23 +101,6 @@ and emoji correctly:
 $w = AnsiUtils::visibleWidth($style->apply($text));  // strips codes, counts columns
 ```
 
-### Tick loop
-
-Accumulate `$event->getDeltaTime()` for a fixed time step and always call
-`$event->setBusy()` to keep the loop running at full speed:
-
-```php
-$tui->onTick(function (TickEvent $event) use ($game, $widget, &$elapsed): void {
-    $elapsed += $event->getDeltaTime();
-    if ($elapsed >= $stepInterval) {
-        $elapsed -= $stepInterval;
-        $game->step();
-        $widget->invalidate();
-    }
-    $event->setBusy();
-});
-```
-
 ---
 
 ## TUI component dependency

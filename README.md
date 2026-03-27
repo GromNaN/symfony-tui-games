@@ -59,25 +59,6 @@ composer install
 
 ---
 
-## Symfony TUI features showcased
-
-| Feature | API | Where |
-|---------|-----|-------|
-| Widget base class | `AbstractWidget` | All games |
-| Focus management | `FocusableInterface`, `FocusableTrait` | All widgets |
-| Declarative keybindings | `KeybindingsTrait`, `getDefaultKeybindings()` | All widgets |
-| Semantic text styling | `Style::apply()` — named colors, bold, dim, reverse | `SnakeWidget`, `SpaceWidget` |
-| CSS-like stylesheet | `StyleSheet` with FQCN selectors | `SnakeCommand`, `SpaceCommand` |
-| `:focus` pseudo-class | `WidgetClass.':focus'` selector in `StyleSheet` | `SnakeCommand`, `SpaceCommand` |
-| Declarative borders | `Border::from()`, `BorderPattern` (ROUNDED, DOUBLE…) | `SnakeCommand`, `SpaceCommand` |
-| Widget centering | `Align::Center`, `VerticalAlign::Center`, `maxColumns` | All commands |
-| Layer compositing | `Compositor::composite()`, `Layer` with `transparent: true` | `SpaceWidget` overlays |
-| Terminal-aware widths | `AnsiUtils::visibleWidth()` — correct for ANSI codes, emoji & wide chars | All widgets |
-| Tick loop | `Tui::onTick()`, `TickEvent::getDeltaTime()`, `setBusy()` | All commands |
-| Render context | `RenderContext::getColumns()` — responsive layout | All widgets |
-
----
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
