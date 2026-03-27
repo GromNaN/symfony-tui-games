@@ -11,30 +11,36 @@ use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
 
 /**
- * Snake game widget — renders only the cell grid (no border, no status bar).
+ * Snake game widget.
  *
- * Border and focus highlight are declared in the StyleSheet (see SnakeCommand).
- * The status bar lives in a sibling TextWidget managed by SnakeCommand.
+ * render() returns the game grid + a thin separator + one status line.
+ * The border and centering are handled by the Renderer via the StyleSheet.
  */
 class SnakeWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
     use KeybindingsTrait;
 
-    // Cell styles — initialised once, reused every render().
+    // Cell / UI styles — initialised once, reused every frame.
     private readonly Style $styleHead;
     private readonly Style $styleBody;
     private readonly Style $styleFood;
     private readonly Style $styleOverlay;
+    private readonly Style $styleSeparator;
+    private readonly Style $styleStatus;
+    private readonly Style $styleStatusHighlight;
     private readonly Style $styleError;
 
     public function __construct(private readonly SnakeGame $game)
     {
-        $this->styleHead    = new Style(color: 'bright_green', bold: true);
-        $this->styleBody    = new Style(color: 'green');
-        $this->styleFood    = new Style(color: 'bright_red');
-        $this->styleOverlay = new Style(reverse: true, bold: true);
-        $this->styleError   = new Style(color: 'bright_red');
+        $this->styleHead            = new Style(color: 'bright_green', bold: true);
+        $this->styleBody            = new Style(color: 'green');
+        $this->styleFood            = new Style(color: 'bright_red');
+        $this->styleOverlay         = new Style(reverse: true, bold: true);
+        $this->styleSeparator       = new Style(dim: true);
+        $this->styleStatus          = new Style(dim: true);
+        $this->styleStatusHighlight = new Style(color: 'yellow');
+        $this->styleError           = new Style(color: 'bright_red');
     }
 
     // -------------------------------------------------------------------------
@@ -75,19 +81,20 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
     }
 
     // -------------------------------------------------------------------------
-    // Rendering  (inner content only — border handled by the Renderer)
+    // Rendering
     // -------------------------------------------------------------------------
 
     public function render(RenderContext $context): array
     {
         $cols = $this->game->getCols();
         $rows = $this->game->getRows();
+        $innerWidth = $cols * 2;
 
-        if ($context->getColumns() < $cols * 2) {
+        if ($context->getColumns() < $innerWidth) {
             return [$this->styleError->apply('Terminal too small!')];
         }
 
-        // Build lookup structures for fast cell classification.
+        // Build lookup structures.
         $snakeBody = $this->game->getSnake();
         $head      = $snakeBody[0] ?? null;
         $bodySet   = [];
@@ -96,6 +103,7 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
         }
         [$fx, $fy] = $this->game->getFood();
 
+        // Game grid.
         $lines = [];
         for ($y = 0; $y < $rows; ++$y) {
             $row = '';
@@ -110,12 +118,44 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
             $lines[] = $row;
         }
 
-        // Overlay for PAUSE / GAME OVER states.
+        // Overlay for PAUSE / GAME OVER.
         if (GameState::Playing !== $this->game->getState()) {
             $lines = $this->applyOverlay($lines, $cols, $rows);
         }
 
+        // Separator + status line.
+        $lines[] = $this->styleSeparator->apply(str_repeat('─', $innerWidth));
+        $lines[] = $this->buildStatusLine($innerWidth);
+
         return $lines;
+    }
+
+    // -------------------------------------------------------------------------
+    // Status line
+    // -------------------------------------------------------------------------
+
+    private function buildStatusLine(int $width): string
+    {
+        $score  = $this->game->getScore();
+        $length = $this->game->getLength();
+        $state  = $this->game->getState();
+
+        $left = \sprintf('Score: %d  Length: %d', $score, $length);
+        if (GameState::Paused === $state) {
+            $left .= '  '.$this->styleStatusHighlight->apply('[PAUSED]');
+        } elseif (GameState::GameOver === $state) {
+            $left .= '  '.$this->styleStatusHighlight->apply('[GAME OVER]');
+        }
+
+        $hint = '↑↓←→  P  R  Q';
+
+        // Compute visible lengths (no ANSI codes).
+        $leftLen = mb_strlen(\sprintf('Score: %d  Length: %d', $score, $length))
+            + (GameState::Playing !== $state ? 2 + mb_strlen(GameState::Paused === $state ? '[PAUSED]' : '[GAME OVER]') : 0);
+        $hintLen = mb_strlen($hint);
+        $pad     = max(1, $width - $leftLen - $hintLen);
+
+        return $this->styleStatus->apply($left.str_repeat(' ', $pad).$hint);
     }
 
     // -------------------------------------------------------------------------
@@ -140,11 +180,9 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
                 continue;
             }
 
-            // Pad the overlay text to a uniform width then style it.
             $padded = mb_str_pad($text, $overlayW);
             $styled = $this->styleOverlay->apply($padded);
 
-            // Splice into the plain line at the correct column.
             $plain  = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
             $before = mb_substr((string) $plain, 0, $startCol);
             $after  = mb_substr((string) $plain, $startCol + $overlayW);
