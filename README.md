@@ -1,10 +1,15 @@
 # Symfony TUI Games
 
-Terminal games built with the **Symfony TUI** component.
+Terminal games built as a **showcase for the `symfony/tui` component**.
+
+Each game deliberately exercises a different slice of the TUI API — styling,
+borders, compositing, keybindings, tick loops — so the project doubles as a
+living, playable reference for the component.
 
 > [!WARNING]
-> **The `symfony/tui` component is experimental and its PR is pending review.**
-> It has not been merged into Symfony yet. See: https://github.com/symfony/symfony-docs/pull/22201
+> **`symfony/tui` is experimental and its PR is pending review.**
+> It has not been merged into Symfony yet.
+> See: https://github.com/symfony/symfony-docs/pull/22201
 >
 > This project embeds the component locally via a `path` repository in `composer.json`.
 > Follow the setup instructions below to get started.
@@ -42,7 +47,7 @@ composer install
 |---------|-------------|
 | `php bin/console app:snake` | **Snake** — eat the apples, avoid the walls and your own tail. Speed increases over time. |
 | `php bin/console app:park` | **Terminal Park** — RollerCoaster Tycoon-style park management. Build paths and attractions, manage money and visitor happiness. |
-| `php bin/console app:space` | **Space Invaders** — defend Earth against waves of invaders rendered with Unicode block sprites. |
+| `php bin/console app:space` | **Space Invaders** — defend Earth against waves of emoji invaders. |
 
 ### Common controls
 
@@ -51,6 +56,25 @@ composer install
 | `Q` / `Ctrl+C` | Quit |
 | `P` / `Space` | Pause (game-dependent) |
 | `R` | Restart (Snake, Space Invaders) |
+
+---
+
+## Symfony TUI features showcased
+
+| Feature | API | Where |
+|---------|-----|-------|
+| Widget base class | `AbstractWidget` | All games |
+| Focus management | `FocusableInterface`, `FocusableTrait` | All widgets |
+| Declarative keybindings | `KeybindingsTrait`, `getDefaultKeybindings()` | All widgets |
+| Semantic text styling | `Style::apply()` — named colors, bold, dim, reverse | `SnakeWidget`, `SpaceWidget` |
+| CSS-like stylesheet | `StyleSheet` with FQCN selectors | `SnakeCommand`, `SpaceCommand` |
+| `:focus` pseudo-class | `WidgetClass.':focus'` selector in `StyleSheet` | `SnakeCommand`, `SpaceCommand` |
+| Declarative borders | `Border::from()`, `BorderPattern` (ROUNDED, DOUBLE…) | `SnakeCommand`, `SpaceCommand` |
+| Widget centering | `Align::Center`, `VerticalAlign::Center`, `maxColumns` | All commands |
+| Layer compositing | `Compositor::composite()`, `Layer` with `transparent: true` | `SpaceWidget` overlays |
+| Terminal-aware widths | `AnsiUtils::visibleWidth()` — correct for emoji & wide chars | `SpaceWidget` |
+| Tick loop | `Tui::onTick()`, `TickEvent::getDeltaTime()`, `setBusy()` | All commands |
+| Render context | `RenderContext::getColumns()` — responsive layout | All widgets |
 
 ---
 
