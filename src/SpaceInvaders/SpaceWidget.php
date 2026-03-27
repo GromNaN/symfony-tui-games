@@ -91,7 +91,7 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             }
         }
 
-        // Invaders — each sprite is 2 terminal rows tall
+        // Invaders — one emoji per cell (2 terminal columns wide)
         $invaders = $this->game->getInvaders();
 
         for ($r = 0; $r < SpaceGame::ROWS; ++$r) {
@@ -99,17 +99,11 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
                 if (!($invaders[$r][$c] ?? false)) {
                     continue;
                 }
-                $ix  = $this->game->invaderX($c);
-                $iy  = $this->game->invaderY($r);
-                [$top, $bot, $color] = $this->invaderGlyph($r);
+                $ix = $this->game->invaderX($c);
+                $iy = $this->game->invaderY($r);
 
-                if ($ix >= 0 && $ix < $W) {
-                    if ($iy >= 0 && $iy < $H) {
-                        $grid[$iy][$ix] = $color.$top.self::R;
-                    }
-                    if ($iy + 1 >= 0 && $iy + 1 < $H) {
-                        $grid[$iy + 1][$ix] = $color.$bot.self::R;
-                    }
+                if ($ix >= 0 && $ix < $W && $iy >= 0 && $iy < $H) {
+                    $grid[$iy][$ix] = $this->invaderGlyph($r);
                 }
             }
         }
@@ -117,7 +111,7 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
         // Explosions
         foreach ($this->game->getExplosions() as $exp) {
             if ($exp['x'] >= 0 && $exp['x'] < $W && $exp['y'] >= 0 && $exp['y'] < $H) {
-                $grid[$exp['y']][$exp['x']] = self::C_YELLOW.self::BOLD.'**'.self::R;
+                $grid[$exp['y']][$exp['x']] = '💥';
             }
         }
 
@@ -135,13 +129,12 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             }
         }
 
-        // Player
+        // Player  (dim during invincibility frames)
         $px = $this->game->getPlayerX();
         if ($px >= 0 && $px < $W) {
-            $playerChar = $this->game->isInvincible()
-                ? self::DIM.self::BOLD.'><'.self::R
-                : self::C_WHITE.self::BOLD.'><'.self::R;
-            $grid[SpaceGame::PLAYER_Y][$px] = $playerChar;
+            $grid[SpaceGame::PLAYER_Y][$px] = $this->game->isInvincible()
+                ? self::DIM.'🚀'.self::R
+                : '🚀';
         }
 
         // Compose lines
@@ -181,21 +174,16 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     // -------------------------------------------------------------------------
 
     /**
-     * Returns the 2-row sprite for an invader row.
-     *
-     * @return array{string, string, string} [topChars, botChars, ansiColor]
-     *
-     * Each string is exactly 2 terminal columns wide.
-     * Sprites use Unicode block characters (▀▄█▌▐) for a pixel-art look.
+     * Returns the emoji for an invader row.
+     * Each emoji is exactly 2 terminal columns wide — one grid cell.
      */
-    private function invaderGlyph(int $row): array
+    private function invaderGlyph(int $row): string
     {
         return match ($row) {
-            //        top   bot    colour
-            0       => ['╔╗', '╚╝', self::C_RED],     // boss  — box frame
-            1       => ['◄►', '▄▀', self::C_YELLOW],  // crab  — arrows + chin
-            2       => ['▀█', '▄ ', self::C_CYAN],    // squid — asymmetric
-            default => ['▄▄', '▀▀', self::C_GREEN],   // bug   — double band
+            0       => '👾',  // alien monster  (30 pts)
+            1       => '🦑',  // squid          (20 pts)
+            2       => '🦀',  // crab           (10 pts)
+            default => '🐙',  // octopus        (10 pts)
         };
     }
 
@@ -203,7 +191,7 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     {
         $score = 'SCORE: '.$this->game->getScore();
         $wave  = 'VAGUE '.$this->game->getWave();
-        $lives = 'VIES: '.str_repeat('><', $this->game->getLives());
+        $lives = 'VIES: '.str_repeat('🚀', $this->game->getLives());
 
         $waveLen   = mb_strlen($wave);
         $leftLen   = mb_strlen($score);
