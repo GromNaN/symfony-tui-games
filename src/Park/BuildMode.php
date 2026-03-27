@@ -24,11 +24,11 @@ enum BuildMode
     public function label(): string
     {
         return match ($this) {
-            self::Path      => 'Chemin',
-            self::Coaster   => 'M. Russes',
-            self::FoodStall => 'Bouffe',
-            self::Toilet    => 'Toilettes',
-            self::Demolish  => 'Demolir',
+            self::Path      => 'Path',
+            self::Coaster   => 'Coaster',
+            self::FoodStall => 'Food Stall',
+            self::Toilet    => 'Toilets',
+            self::Demolish  => 'Demolish',
         };
     }
 

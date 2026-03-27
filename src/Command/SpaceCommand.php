@@ -59,7 +59,7 @@ final class SpaceCommand
         $tui->run();
 
         $output->writeln(\sprintf(
-            'Score final — <info>%d pts</info>  |  Vague : <info>%d</info>',
+            'Final score — <info>%d pts</info>  |  Wave: <info>%d</info>',
             $game->getScore(),
             $game->getWave(),
         ));

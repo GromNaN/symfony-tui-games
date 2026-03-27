@@ -89,7 +89,7 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
         $minHeight = $H + 3; // 23
 
         if ($context->getColumns() < $minWidth) {
-            return ["\033[31mTerminal trop petit ! ({$minWidth} colonnes minimum)\033[0m"];
+            return ["\033[31mTerminal too small! ({$minWidth} columns minimum)\033[0m"];
         }
 
         // Build a cell grid: index [y][x] => 2-char ANSI string
@@ -160,9 +160,9 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
         $state = $this->game->getState();
         if ($state !== GameState::Playing) {
             $texts = match ($state) {
-                GameState::Paused      => ['', '  [ PAUSE ]  ', '  [P] Reprendre  [R] Restart  ', ''],
-                GameState::GameOver    => ['', '  GAME  OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  [R] Rejouer  ', ''],
-                GameState::WaveCleared => ['', \sprintf('  VAGUE %d TERMINEE !  ', $this->game->getWave()), '  Prochaine vague...  ', ''],
+                GameState::Paused      => ['', '  [ PAUSE ]  ', '  [P] Resume  [R] Restart  ', ''],
+                GameState::GameOver    => ['', '  GAME  OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  [R] Play again  ', ''],
+                GameState::WaveCleared => ['', \sprintf('  WAVE %d CLEARED!  ', $this->game->getWave()), '  Next wave...  ', ''],
                 default                => [],
             };
 
@@ -218,8 +218,8 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     private function buildScoreRow(int $innerWidth): string
     {
         $score = 'SCORE: '.$this->game->getScore();
-        $wave  = 'VAGUE '.$this->game->getWave();
-        $lives = 'VIES: '.str_repeat('🚀', $this->game->getLives());
+        $wave  = 'WAVE '.$this->game->getWave();
+        $lives = 'LIVES: '.str_repeat('🚀', $this->game->getLives());
 
         $waveLen   = AnsiUtils::visibleWidth($wave);
         $leftLen   = AnsiUtils::visibleWidth($score);

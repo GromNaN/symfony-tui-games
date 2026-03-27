@@ -18,7 +18,7 @@ use Symfony\Component\Tui\Style\StyleSheet;
 use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
 
-#[AsCommand(name: 'app:snake', description: 'Jeu de Snake dans le terminal')]
+#[AsCommand(name: 'app:snake', description: 'Snake game in the terminal')]
 final class SnakeCommand
 {
     public function __invoke(InputInterface $input, OutputInterface $output): int

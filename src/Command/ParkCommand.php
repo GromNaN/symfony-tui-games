@@ -15,7 +15,7 @@ use Symfony\Component\Tui\Style\StyleSheet;
 use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
 
-#[AsCommand(name: 'app:park', description: 'Jeu de gestion de parc d\'attractions')]
+#[AsCommand(name: 'app:park', description: 'Theme park management game')]
 final class ParkCommand
 {
     public function __invoke(InputInterface $input, OutputInterface $output): int
@@ -54,7 +54,7 @@ final class ParkCommand
         $tui->run();
 
         $output->writeln(\sprintf(
-            'Score final — Argent : <info>$%s</info>  |  Visiteurs : <info>%d</info>  |  Revenu total : <info>$%s</info>',
+            'Final score — Money: <info>$%s</info>  |  Visitors: <info>%d</info>  |  Total revenue: <info>$%s</info>',
             number_format($game->getMoney()),
             $game->getTotalVisitors(),
             number_format($game->getTotalRevenue()),

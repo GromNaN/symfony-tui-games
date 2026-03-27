@@ -9,7 +9,7 @@ class SnakeGame
 
     private Direction $direction;
 
-    /** @var list<Direction> Directions en attente, dépilées à chaque step (max 2) */
+    /** @var list<Direction> Queued directions, consumed one per step (max 2) */
     private array $directionQueue = [];
 
     /** @var array{int, int} */
@@ -88,7 +88,7 @@ class SnakeGame
 
     public function changeDirection(Direction $direction): void
     {
-        // La direction de référence est la dernière en file (ou la courante si la file est vide)
+        // Reference direction is the last queued one (or the current direction if the queue is empty)
         $lastDir = end($this->directionQueue) ?: $this->direction;
 
         if ($direction !== $lastDir->opposite() && $direction !== $lastDir && \count($this->directionQueue) < 2) {

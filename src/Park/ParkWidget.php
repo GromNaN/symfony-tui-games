@@ -101,7 +101,7 @@ class ParkWidget extends AbstractWidget implements FocusableInterface
         $minWidth = $COLS * 2 + 2 + 1 + self::INFO_W + 2; // 67
 
         if ($context->getColumns() < $minWidth) {
-            return ["\033[31mTerminal trop petit ! ({$minWidth} colonnes minimum)\033[0m"];
+            return ["\033[31mTerminal too small! ({$minWidth} columns minimum)\033[0m"];
         }
 
         // Visitor positions map [y][x] => count
@@ -196,12 +196,12 @@ class ParkWidget extends AbstractWidget implements FocusableInterface
         $lines[] = '╔'.str_repeat('═', $W).'╗';          // row 0: top border
         $lines[] = $titleRow;                              // row 1: title
         $lines[] = $row($pad(''));                         // row 2: separator
-        $lines[] = $row($pad(" \$ Argent   : $money"),    "\033[93m");
-        $lines[] = $row($pad(" @ Visiteurs: $visitors"),  "\033[96m");
-        $lines[] = $row($pad(" ~ Bonheur  : {$happy}%"),  $happyAnsi);
-        $lines[] = $row($pad(" + Revenu   : $revenue"),   "\033[32m");
+        $lines[] = $row($pad(" \$ Money    : $money"),    "\033[93m");
+        $lines[] = $row($pad(" @ Visitors : $visitors"),  "\033[96m");
+        $lines[] = $row($pad(" ~ Happiness: {$happy}%"),  $happyAnsi);
+        $lines[] = $row($pad(" + Revenue  : $revenue"),   "\033[32m");
         $lines[] = $row($pad(''));                         // separator
-        $lines[] = $row($pad(' CONSTRUIRE :'),             self::BOLD);
+        $lines[] = $row($pad(' BUILD :'),                  self::BOLD);
         foreach (BuildMode::cases() as $m) {
             $cost   = null !== $m->cost() ? ' $'.$m->cost() : '';
             $label  = " [{$m->shortKey()}] {$m->label()}";
@@ -226,11 +226,11 @@ class ParkWidget extends AbstractWidget implements FocusableInterface
         $left  = self::BOLD."({$cx},{$cy}) {$tile->label()}".self::R
             .'  '.self::DIM.$event.self::R;
 
-        $hint  = self::DIM.'↑↓←→·WASD  [Entr] Poser  [X] Demo  [1-4/D] Mode  [P] Pause  [Q] Quitter'.self::R;
+        $hint  = self::DIM.'↑↓←→·WASD  [Entr] Place  [X] Demo  [1-4/D] Mode  [P] Pause  [Q] Quit'.self::R;
 
         // Visible lengths
         $leftVis = mb_strlen("({$cx},{$cy}) {$tile->label()}  $event");
-        $hintVis = mb_strlen('↑↓←→·WASD  [Entr] Poser  [X] Demo  [1-4/D] Mode  [P] Pause  [Q] Quitter');
+        $hintVis = mb_strlen('↑↓←→·WASD  [Entr] Place  [X] Demo  [1-4/D] Mode  [P] Pause  [Q] Quit');
 
         $padding = max(1, $totalWidth - $leftVis - $hintVis);
 

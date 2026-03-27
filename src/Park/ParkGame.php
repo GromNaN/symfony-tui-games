@@ -27,7 +27,7 @@ class ParkGame
     private bool $paused = false;
 
     /** Most recent event message for the status bar. */
-    private string $lastEvent = 'Construisez un chemin depuis >> pour attirer des visiteurs !';
+    private string $lastEvent = 'Build a path from >> to attract visitors!';
 
     public function __construct(int $startingMoney = 2000)
     {
@@ -194,7 +194,7 @@ class ParkGame
 
         $cost = $tileType->cost() ?? 0;
         if ($this->money < $cost) {
-            $this->lastEvent = 'Pas assez d\'argent !';
+            $this->lastEvent = 'Not enough money!';
 
             return;
         }
@@ -242,7 +242,7 @@ class ParkGame
     public function togglePause(): void
     {
         $this->paused = !$this->paused;
-        $this->lastEvent = $this->paused ? 'Pause' : 'Reprise';
+        $this->lastEvent = $this->paused ? 'Paused' : 'Resumed';
     }
 
     // -------------------------------------------------------------------------
