@@ -10,6 +10,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Tui\Event\TickEvent;
 use Symfony\Component\Tui\Style\Align;
+use Symfony\Component\Tui\Style\Border;
+use Symfony\Component\Tui\Style\BorderPattern;
 use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Style\StyleSheet;
 use Symfony\Component\Tui\Style\VerticalAlign;
@@ -24,6 +26,18 @@ final class SpaceCommand
             ':root' => new Style(
                 align: Align::Center,
                 verticalAlign: VerticalAlign::Center,
+            ),
+
+            // Outer width = GAME_W * 2 content + 2 border — pins width for :root centering.
+            SpaceWidget::class => new Style(
+                maxColumns: SpaceGame::GAME_W * 2 + 2,
+                border: Border::from([1], BorderPattern::DOUBLE, 'white'),
+                dim: true,
+            ),
+
+            SpaceWidget::class.':focus' => new Style(
+                border: Border::from([1], BorderPattern::DOUBLE, 'bright_white'),
+                dim: false,
             ),
         ]);
 

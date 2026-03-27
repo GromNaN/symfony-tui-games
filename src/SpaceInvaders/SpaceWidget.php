@@ -4,7 +4,12 @@ namespace App\SpaceInvaders;
 
 use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Input\Key;
+use Symfony\Component\Tui\Render\Compositor;
+use Symfony\Component\Tui\Render\Layer;
 use Symfony\Component\Tui\Render\RenderContext;
+use Symfony\Component\Tui\Style\Border;
+use Symfony\Component\Tui\Style\BorderPattern;
+use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
@@ -25,14 +30,17 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     private const BOLD = "\033[1m";
 
     // Colours
-    private const C_RED    = "\033[91m";   // bright red   — row 0 invaders + enemy bullets
-    private const C_YELLOW = "\033[93m";   // bright yellow — row 1 + explosions
-    private const C_CYAN   = "\033[96m";   // bright cyan   — row 2
-    private const C_GREEN  = "\033[92m";   // bright green  — row 3
-    private const C_WHITE  = "\033[97m";   // bright white  — player + bullets
+    private const C_RED    = "\033[91m";   // bright red   — enemy bullets
+    private const C_YELLOW = "\033[93m";   // bright yellow — wave label
+    private const C_WHITE  = "\033[97m";   // bright white  — player bullets + lives
+
+    private readonly Style  $styleOverlay;
+    private readonly Border $overlayBorder;
 
     public function __construct(private readonly SpaceGame $game)
     {
+        $this->styleOverlay  = new Style(reverse: true);
+        $this->overlayBorder = Border::from([1], BorderPattern::ROUNDED, 'bright_white');
     }
 
     // -------------------------------------------------------------------------
@@ -77,8 +85,8 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     {
         $W         = SpaceGame::GAME_W;
         $H         = SpaceGame::GAME_H;
-        $minWidth  = $W * 2 + 2; // 62
-        $minHeight = $H + 3;     // 23
+        $minWidth  = $W * 2; // 60 inner cols (border drawn by Renderer)
+        $minHeight = $H + 3; // 23
 
         if ($context->getColumns() < $minWidth) {
             return ["\033[31mTerminal trop petit ! ({$minWidth} colonnes minimum)\033[0m"];
@@ -138,36 +146,55 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
                 : '🚀';
         }
 
-        // Compose lines
-        $lines   = [];
-        $border  = self::DIM;
-        $topLine = $border.'╔'.str_repeat('══', $W).'╗'.self::R;
-        $lines[] = $this->buildScoreRow($W * 2);
-
-        $lines[] = $topLine;
-
+        // Flatten grid into lines
+        $gridLines = [];
         for ($y = 0; $y < $H; ++$y) {
-            $row = $border.'║'.self::R;
+            $row = '';
             for ($x = 0; $x < $W; ++$x) {
                 $row .= $grid[$y][$x];
             }
-            $row    .= $border.'║'.self::R;
-            $lines[] = $row;
+            $gridLines[] = $row;
         }
 
-        $lines[] = $border.'╚'.str_repeat('══', $W).'╝'.self::R;
-
-        // Overlays
+        // Overlay via Compositor
         $state = $this->game->getState();
-        if ($state === GameState::Paused) {
-            $lines = $this->overlay($lines, ['', '  [ PAUSE ]  ', '  [P] Reprendre  [R] Restart  ', '']);
-        } elseif ($state === GameState::GameOver) {
-            $lines = $this->overlay($lines, ['', '  GAME  OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  [R] Rejouer  ', '']);
-        } elseif ($state === GameState::WaveCleared) {
-            $lines = $this->overlay($lines, ['', \sprintf('  VAGUE %d TERMINEE !  ', $this->game->getWave()), '  Prochaine vague...  ', '']);
+        if ($state !== GameState::Playing) {
+            $texts = match ($state) {
+                GameState::Paused      => ['', '  [ PAUSE ]  ', '  [P] Reprendre  [R] Restart  ', ''],
+                GameState::GameOver    => ['', '  GAME  OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  [R] Rejouer  ', ''],
+                GameState::WaveCleared => ['', \sprintf('  VAGUE %d TERMINEE !  ', $this->game->getWave()), '  Prochaine vague...  ', ''],
+                default                => [],
+            };
+
+            if ([] !== $texts) {
+                $overlayW = max(array_map(fn ($t) => AnsiUtils::visibleWidth($t), $texts));
+                $overlayH = \count($texts);
+
+                // Build content lines (uniform width, reverse-video)
+                $contentLines = [];
+                foreach ($texts as $text) {
+                    $textLen        = AnsiUtils::visibleWidth($text);
+                    $padded         = $text.str_repeat(' ', $overlayW - $textLen);
+                    $contentLines[] = $this->styleOverlay->apply($padded);
+                }
+
+                // Wrap with a rounded border (+1 row top/bottom, +1 col left/right)
+                $overlayLines = $this->overlayBorder->wrapLines($contentLines, $overlayW, $this->styleOverlay);
+                $borderedW    = $overlayW + 2;
+                $borderedH    = $overlayH + 2;
+
+                $overlayRow = (int) (($H - $borderedH) / 2);
+                $overlayCol = (int) (($W * 2 - $borderedW) / 2);
+
+                $gridLines = Compositor::composite(
+                    new Layer($gridLines, width: $W * 2, height: $H),
+                    new Layer($overlayLines, row: $overlayRow, col: $overlayCol, transparent: true),
+                );
+            }
         }
 
-        return $lines;
+        // Assemble final output: score row + game grid (border drawn by Renderer via StyleSheet)
+        return [$this->buildScoreRow($W * 2), ...$gridLines];
     }
 
     // -------------------------------------------------------------------------
@@ -207,37 +234,5 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             .self::C_YELLOW.self::BOLD.$wave.self::R
             .str_repeat(' ', max(0, $rightPad))
             .self::C_WHITE.$lives.self::R;
-    }
-
-    /**
-     * Renders overlay text centred horizontally in the play area.
-     *
-     * @param  string[] $lines  Full line array (includes score row + borders)
-     * @param  string[] $texts  Lines of overlay text
-     * @return string[]
-     */
-    private function overlay(array $lines, array $texts): array
-    {
-        $W         = SpaceGame::GAME_W;
-        $innerWidth = $W * 2;  // each cell = 2 chars
-        $startRow   = (int) ((\count($lines) - \count($texts)) / 2);
-
-        foreach ($texts as $i => $text) {
-            $lineIdx = $startRow + $i;
-            if (!isset($lines[$lineIdx])) {
-                continue;
-            }
-            $visible = $W * 2; // inner width in terminal columns (no ANSI, no emoji ambiguity)
-            $textLen = AnsiUtils::visibleWidth($text);
-            $pad     = (int) (($visible - $textLen) / 2);
-            $padded  = str_repeat(' ', max(0, $pad))
-                ."\033[7m".$text.self::R
-                .str_repeat(' ', max(0, $visible - $textLen - $pad));
-
-            // Replace the content between borders (keep first char '║' and last '║')
-            $lines[$lineIdx] = self::DIM.'║'.self::R.$padded.self::DIM.'║'.self::R;
-        }
-
-        return $lines;
     }
 }
