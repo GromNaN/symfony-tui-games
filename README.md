@@ -48,14 +48,15 @@ composer install
 | `php bin/console app:snake` | **Snake** — eat the apples, avoid the walls and your own tail. Speed increases over time. |
 | `php bin/console app:park` | **Terminal Park** — RollerCoaster Tycoon-style park management. Build paths and attractions, manage money and visitor happiness. |
 | `php bin/console app:space` | **Space Invaders** — defend Earth against waves of emoji invaders. |
+| `php bin/console app:tetris` | **Tetris** — classic falling pieces with ghost preview, soft/hard drop, and increasing speed. |
 
 ### Common controls
 
 | Key | Action |
 |-----|--------|
 | `Q` / `Ctrl+C` | Quit |
-| `P` / `Space` | Pause (game-dependent) |
-| `R` | Restart (Snake, Space Invaders) |
+| `P` | Pause / resume |
+| `R` | Restart |
 
 ---
 
