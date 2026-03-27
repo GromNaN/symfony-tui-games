@@ -2,6 +2,7 @@
 
 namespace App\SpaceInvaders;
 
+use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Input\Key;
 use Symfony\Component\Tui\Render\RenderContext;
 use Symfony\Component\Tui\Widget\AbstractWidget;
@@ -193,9 +194,9 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
         $wave  = 'VAGUE '.$this->game->getWave();
         $lives = 'VIES: '.str_repeat('🚀', $this->game->getLives());
 
-        $waveLen   = mb_strlen($wave);
-        $leftLen   = mb_strlen($score);
-        $rightLen  = mb_strlen($lives);
+        $waveLen   = AnsiUtils::visibleWidth($wave);
+        $leftLen   = AnsiUtils::visibleWidth($score);
+        $rightLen  = AnsiUtils::visibleWidth($lives);
         $midLeft   = (int) (($innerWidth - $waveLen) / 2);
         $midRight  = $innerWidth - $waveLen - $midLeft;
         $leftPad   = $midLeft - $leftLen;
@@ -226,11 +227,8 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             if (!isset($lines[$lineIdx])) {
                 continue;
             }
-            // Strip ANSI from existing line to measure / rebuild
-            $plain   = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
-            $visible = mb_strlen((string) $plain);
-
-            $textLen = mb_strlen($text);
+            $visible = $W * 2; // inner width in terminal columns (no ANSI, no emoji ambiguity)
+            $textLen = AnsiUtils::visibleWidth($text);
             $pad     = (int) (($visible - $textLen) / 2);
             $padded  = str_repeat(' ', max(0, $pad))
                 ."\033[7m".$text.self::R
