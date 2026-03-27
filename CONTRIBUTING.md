@@ -92,11 +92,13 @@ $lines = Compositor::composite(
 
 ### Terminal-aware widths
 
-Use `AnsiUtils::visibleWidth()` instead of `mb_strlen()` when measuring strings
-that may contain emoji or other wide characters (each occupies 2 terminal columns):
+Always use `AnsiUtils::visibleWidth()` instead of `mb_strlen()` or `strlen()` when
+measuring strings destined for the terminal. It strips ANSI escape codes and counts
+the actual terminal columns occupied, handling multi-byte characters, wide characters,
+and emoji correctly:
 
 ```php
-$w = AnsiUtils::visibleWidth('LIVES: 🚀🚀🚀');  // correct: 16, not 12
+$w = AnsiUtils::visibleWidth($style->apply($text));  // strips codes, counts columns
 ```
 
 ### Tick loop

@@ -72,7 +72,7 @@ composer install
 | Declarative borders | `Border::from()`, `BorderPattern` (ROUNDED, DOUBLE…) | `SnakeCommand`, `SpaceCommand` |
 | Widget centering | `Align::Center`, `VerticalAlign::Center`, `maxColumns` | All commands |
 | Layer compositing | `Compositor::composite()`, `Layer` with `transparent: true` | `SpaceWidget` overlays |
-| Terminal-aware widths | `AnsiUtils::visibleWidth()` — correct for emoji & wide chars | `SpaceWidget` |
+| Terminal-aware widths | `AnsiUtils::visibleWidth()` — correct for ANSI codes, emoji & wide chars | All widgets |
 | Tick loop | `Tui::onTick()`, `TickEvent::getDeltaTime()`, `setBusy()` | All commands |
 | Render context | `RenderContext::getColumns()` — responsive layout | All widgets |
 
