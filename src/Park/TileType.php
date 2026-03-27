@@ -72,12 +72,12 @@ enum TileType
     public function label(): string
     {
         return match ($this) {
-            self::Grass     => 'Herbe',
-            self::Path      => 'Chemin',
-            self::Entrance  => 'Entree',
-            self::Coaster   => 'Montagnes russes',
-            self::FoodStall => 'Stand bouffe',
-            self::Toilet    => 'Toilettes',
+            self::Grass     => 'Grass',
+            self::Path      => 'Path',
+            self::Entrance  => 'Entrance',
+            self::Coaster   => 'Roller Coaster',
+            self::FoodStall => 'Food Stall',
+            self::Toilet    => 'Toilets',
         };
     }
 }
