@@ -9,7 +9,10 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Tui\Event\InputEvent;
 use Symfony\Component\Tui\Event\TickEvent;
+use Symfony\Component\Tui\Input\Key;
+use Symfony\Component\Tui\Input\Keybindings;
 use Symfony\Component\Tui\Style\Align;
 use Symfony\Component\Tui\Style\Border;
 use Symfony\Component\Tui\Style\BorderPattern;
@@ -43,7 +46,13 @@ final class TetrisCommand
         ]);
 
         $tui = new Tui($stylesheet);
-        $tui->quitOn('ctrl+c', 'q');
+        $quitKeys = new Keybindings(['quit' => [Key::ctrl('c'), 'q']]);
+        $tui->on(InputEvent::class, function (InputEvent $event) use ($tui, $quitKeys): void {
+            if ($quitKeys->matches($event->getData(), 'quit')) {
+                $tui->stop();
+                $event->stopPropagation();
+            }
+        });
 
         $game   = new TetrisGame();
         $widget = new TetrisWidget($game);
