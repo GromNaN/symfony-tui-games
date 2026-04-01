@@ -48,6 +48,7 @@ composer install
 | `php bin/console app:park` | **Terminal Park** — RollerCoaster Tycoon-style park management. Build paths and attractions, manage money and visitor happiness. |
 | `php bin/console app:space` | **Space Invaders** — defend Earth against waves of emoji invaders. |
 | `php bin/console app:tetris` | **Tetris** — classic falling pieces with ghost preview, soft/hard drop, and increasing speed. |
+| `php bin/console app:pong` | **Pong** — two-player classic. Player 1 uses W/S, Player 2 uses arrow keys. First to 11 wins. |
 
 ### Common controls
 
