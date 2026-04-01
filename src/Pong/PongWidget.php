@@ -9,6 +9,7 @@ use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
+use Symfony\Component\Tui\Widget\QuitableTrait;
 
 /**
  * Pong game widget — two-player.
@@ -20,6 +21,7 @@ class PongWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
     use KeybindingsTrait;
+    use QuitableTrait;
 
     private readonly Style $stylePaddle1;
     private readonly Style $stylePaddle2;
@@ -59,6 +61,7 @@ class PongWidget extends AbstractWidget implements FocusableInterface
             'p2_down' => [Key::DOWN],
             'pause'   => ['p', Key::SPACE],
             'restart' => ['r'],
+            'quit'    => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -84,6 +87,8 @@ class PongWidget extends AbstractWidget implements FocusableInterface
         } elseif ($kb->matches($data, 'restart') && GameState::GameOver === $this->game->getState()) {
             $this->game->reset();
             $this->invalidate();
+        } elseif ($kb->matches($data, 'quit')) {
+            $this->dispatchQuit();
         }
     }
 

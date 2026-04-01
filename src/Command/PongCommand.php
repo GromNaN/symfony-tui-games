@@ -45,7 +45,6 @@ final class PongCommand
         ]);
 
         $tui = new Tui($stylesheet);
-        $tui->quitOn('ctrl+c', 'q');
 
         $game   = new PongGame(cols: $cols, rows: $rows);
         $widget = new PongWidget($game);
