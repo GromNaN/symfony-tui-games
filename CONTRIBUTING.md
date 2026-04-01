@@ -105,6 +105,14 @@ $w = AnsiUtils::visibleWidth($style->apply($text));  // strips codes, counts col
 
 ## TUI component dependency
 
-The `symfony/tui` component is bundled locally under `vendor-src/` (see [README.md](README.md)).
-It is **not** available on Packagist. Do not run `composer update symfony/tui` without first
-updating the source repository in `vendor-src/symfony`.
+The `symfony/tui` component lives under `vendor-src/symfony` as a Git submodule
+pointing to the `tui` branch of `fabpot/symfony`, locked to a specific commit
+(see [README.md](README.md)). It is **not** available on Packagist.
+
+To update the submodule to the latest commit on the `tui` branch:
+
+```bash
+git submodule update --remote vendor-src/symfony
+git add vendor-src/symfony
+git commit -m "Update symfony/tui submodule"
+```

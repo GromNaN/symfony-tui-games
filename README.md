@@ -11,7 +11,8 @@ living, playable reference for the component.
 > It has not been merged into Symfony yet.
 > See: https://github.com/symfony/symfony-docs/pull/22201
 >
-> This project embeds the component locally via a `path` repository in `composer.json`.
+> This project embeds the component via a Git submodule pointing to the
+> `tui` branch of `fabpot/symfony`, locked to a specific commit.
 > Follow the setup instructions below to get started.
 
 ---
@@ -25,19 +26,17 @@ living, playable reference for the component.
 ## Installation
 
 ```bash
-# 1. Clone this repository
-git clone https://github.com/GromNaN/symfony-tui-games.git symfony-tui-games
+# Clone this repository with its submodule
+git clone --recurse-submodules https://github.com/GromNaN/symfony-tui-games.git symfony-tui-games
 cd symfony-tui-games
 
-# 2. Fetch the TUI component from the pending PR branch
-git clone --branch tui --single-branch https://github.com/fabpot/symfony.git vendor-src/symfony
-
-# 3. Install dependencies (the TUI component is loaded from vendor-src/ via a path repository)
+# Install dependencies (the TUI component is loaded from vendor-src/ via a path repository)
 composer install
 ```
 
-> `composer.json` references `vendor-src/symfony/src/Symfony/Component/Tui`
-> as a `path` repository, so no further configuration is needed.
+> If you cloned without `--recurse-submodules`, run
+> `git submodule update --init` before `composer install`.
+> The `composer install` / `composer update` scripts also run this automatically.
 
 ---
 
