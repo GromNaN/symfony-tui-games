@@ -3,10 +3,12 @@
 namespace App\Clock;
 
 use Symfony\Component\Tui\Input\Key;
+use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
+use Symfony\Component\Tui\Widget\ProgressBarWidget;
 use Symfony\Component\Tui\Widget\QuitableTrait;
 use Symfony\Component\Tui\Widget\ScheduledTickTrait;
 use Symfony\Component\Tui\Widget\TextWidget;
@@ -18,6 +20,9 @@ use Symfony\Component\Tui\Widget\WidgetContext;
  * Displays the current time in FIGlet (big font), date, a seconds progress
  * bar, and day/week progress indicators.  Keybindings: t=theme, s=seconds
  * toggle, h=12/24 h toggle, q/ctrl+c=quit.
+ *
+ * Bar colours are applied via StyleSheet element rules; call
+ * {@see ClockCommand::configureStylesheet()} before running.
  */
 class ClockWidget extends ContainerWidget implements FocusableInterface
 {
@@ -26,12 +31,15 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
     use KeybindingsTrait;
     use ScheduledTickTrait;
 
-    private const THEMES = [
-        ['name' => 'Cyan',   'time' => 'text-cyan-400',   'date' => 'text-cyan-700',   'border' => 'border-cyan-800',   'bar' => [80, 200, 220]],
-        ['name' => 'Green',  'time' => 'text-green-400',  'date' => 'text-green-700',  'border' => 'border-green-800',  'bar' => [80, 200, 120]],
-        ['name' => 'Amber',  'time' => 'text-amber-400',  'date' => 'text-amber-700',  'border' => 'border-amber-800',  'bar' => [255, 200, 50]],
-        ['name' => 'Rose',   'time' => 'text-rose-400',   'date' => 'text-rose-700',   'border' => 'border-rose-800',   'bar' => [255, 100, 130]],
-        ['name' => 'Violet', 'time' => 'text-violet-400', 'date' => 'text-violet-700', 'border' => 'border-violet-800', 'bar' => [160, 120, 255]],
+    /**
+     * @var array<int, array{name: string, time: string, date: string, border: string, css: string, bar: int[]}>
+     */
+    public const THEMES = [
+        ['name' => 'Cyan',   'time' => 'text-cyan-400',   'date' => 'text-cyan-700',   'border' => 'border-cyan-800',   'css' => 'clock-bar-cyan',   'bar' => [80, 200, 220]],
+        ['name' => 'Green',  'time' => 'text-green-400',  'date' => 'text-green-700',  'border' => 'border-green-800',  'css' => 'clock-bar-green',  'bar' => [80, 200, 120]],
+        ['name' => 'Amber',  'time' => 'text-amber-400',  'date' => 'text-amber-700',  'border' => 'border-amber-800',  'css' => 'clock-bar-amber',  'bar' => [255, 200, 50]],
+        ['name' => 'Rose',   'time' => 'text-rose-400',   'date' => 'text-rose-700',   'border' => 'border-rose-800',   'css' => 'clock-bar-rose',   'bar' => [255, 100, 130]],
+        ['name' => 'Violet', 'time' => 'text-violet-400', 'date' => 'text-violet-700', 'border' => 'border-violet-800', 'css' => 'clock-bar-violet', 'bar' => [160, 120, 255]],
     ];
 
     private int $themeIndex = 0;
@@ -41,9 +49,10 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
 
     private readonly TextWidget $timeWidget;
     private readonly TextWidget $dateWidget;
-    private readonly TextWidget $barWidget;
-    private readonly TextWidget $infoWidget;
     private readonly TextWidget $statusText;
+    private readonly ProgressBarWidget $secondsBar;
+    private readonly ProgressBarWidget $dayBar;
+    private readonly ProgressBarWidget $weekBar;
 
     public function __construct()
     {
@@ -63,29 +72,46 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         $this->timeWidget = new TextWidget('');
         $this->timeWidget
              ->addStyleClass('font-big')
-             ->addStyleClass('text-cyan-400')
              ->addStyleClass('bold')
-             ->addStyleClass('text-center');
+             ->addStyleClass('text-center')
+             ->addStyleClass('text-cyan-400');
         $main->add($this->timeWidget);
 
         $this->dateWidget = new TextWidget('');
         $this->dateWidget
-             ->addStyleClass('text-cyan-700')
-             ->addStyleClass('text-center');
+             ->addStyleClass('text-center')
+             ->addStyleClass('text-cyan-700');
         $main->add($this->dateWidget);
 
-        $this->barWidget = new TextWidget('');
-        $this->barWidget
-             ->addStyleClass('text-gray-500')
-             ->addStyleClass('text-center');
-        $main->add($this->barWidget);
+        // Seconds bar: one block per second, 60 chars wide.
+        $this->secondsBar = new ProgressBarWidget(60, '%bar%');
+        $this->secondsBar
+             ->setBarWidth(60)
+             ->setBarCharacter('█')
+             ->setEmptyBarCharacter('░')
+             ->addStyleClass('text-center')
+             ->addStyleClass('clock-bar-cyan');
+        $main->add($this->secondsBar);
 
-        $this->infoWidget = new TextWidget('');
-        $this->infoWidget
+        // Day and week progress bars.
+        $this->dayBar = new ProgressBarWidget(86400, 'Day   %bar%  %percent:4s%%');
+        $this->dayBar
+             ->setBarWidth(30)
+             ->setBarCharacter('█')
+             ->setEmptyBarCharacter('░')
              ->addStyleClass('text-gray-600')
-             ->addStyleClass('dim')
-             ->addStyleClass('text-center');
-        $main->add($this->infoWidget);
+             ->addStyleClass('clock-bar-cyan');
+        $main->add($this->dayBar);
+
+        $this->weekBar = new ProgressBarWidget(7 * 86400, 'Week  %bar%  %percent:4s%%  (%day%)');
+        $this->weekBar
+             ->setBarWidth(30)
+             ->setBarCharacter('█')
+             ->setEmptyBarCharacter('░')
+             ->addStyleClass('text-gray-600')
+             ->addStyleClass('clock-bar-cyan');
+        $this->weekBar->setPlaceholderFormatter('day', static fn () => date('l'));
+        $main->add($this->weekBar);
 
         $this->add($main);
 
@@ -99,9 +125,6 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
             ->addStyleClass('align-center');
 
         $this->statusText = new TextWidget('');
-        $this->statusText
-             ->addStyleClass('text-gray-600')
-             ->addStyleClass('dim');
         $statusBar->add($this->statusText);
 
         $this->add($statusBar);
@@ -128,8 +151,6 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         if ($kb->matches($data, 'theme')) {
             $this->themeIndex = ($this->themeIndex + 1) % \count(self::THEMES);
             $this->applyTheme();
-            $this->lastTime = '';
-            $this->updateDisplay();
         } elseif ($kb->matches($data, 'seconds')) {
             $this->showSeconds = !$this->showSeconds;
             $this->lastTime = '';
@@ -176,9 +197,16 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
     private function applyTheme(): void
     {
         $theme = self::THEMES[$this->themeIndex];
+
+        $this->setStyleClasses(['bg-gray-950', 'border', 'border-double', $theme['border']]);
         $this->timeWidget->setStyleClasses(['font-big', 'bold', 'text-center', $theme['time']]);
         $this->dateWidget->setStyleClasses(['text-center', $theme['date']]);
-        $this->setStyleClasses(['bg-gray-950', 'border', 'border-double', $theme['border']]);
+        $this->secondsBar->setStyleClasses(['text-center', $theme['css']]);
+        $this->dayBar->setStyleClasses(['text-gray-600', $theme['css']]);
+        $this->weekBar->setStyleClasses(['text-gray-600', $theme['css']]);
+
+        $this->lastTime = '';
+        $this->updateDisplay();
     }
 
     private function timeString(): string
@@ -198,55 +226,34 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         }
         $this->lastTime = $time;
 
-        $theme = self::THEMES[$this->themeIndex];
-        [$r, $g, $b] = $theme['bar'];
-        $barFg  = \sprintf("\x1b[38;2;%d;%d;%dm", $r, $g, $b);
-        $barDim = \sprintf("\x1b[38;2;%d;%d;%dm", (int) ($r * 0.3), (int) ($g * 0.3), (int) ($b * 0.3));
-        $reset  = "\x1b[0m";
+        $h   = (int) date('G');
+        $m   = (int) date('i');
+        $s   = (int) date('s');
+        $dow = (int) date('N'); // 1=Mon … 7=Sun
 
         $this->timeWidget->setText($time);
         $this->dateWidget->setText("\n".date('l, F j, Y')."\n");
 
-        // Seconds progress bar (60 chars wide = 1 char per second).
-        $sec    = (int) date('s');
-        $barW   = 60;
-        $filled = min($barW, $sec);
-        $this->barWidget->setText(
-            $barFg.str_repeat('█', $filled)
-            .$barDim.str_repeat('░', $barW - $filled)
-            .$reset."\n"
-        );
+        $this->secondsBar->setProgress($s);
+        $this->dayBar->setProgress($h * 3600 + $m * 60 + $s);
+        $this->weekBar->setProgress(($dow - 1) * 86400 + $h * 3600 + $m * 60 + $s);
 
-        // Day and week progress.
-        $h = (int) date('G');
-        $m = (int) date('i');
-        $s = (int) date('s');
-
-        $dayPct  = ($h * 3600 + $m * 60 + $s) / 86400.0 * 100;
-        $dow     = (int) date('N'); // 1=Mon … 7=Sun
-        $weekPct = (($dow - 1 + $h / 24.0) / 7.0) * 100;
-
-        $dayFilled  = (int) ($dayPct / 100 * 30);
-        $weekFilled = (int) ($weekPct / 100 * 30);
-        $dim        = "\x1b[2m";
-        $gray       = "\x1b[38;2;70;70;80m";
-
-        $dayBar  = $barFg.str_repeat('█', $dayFilled).$barDim.str_repeat('░', 30 - $dayFilled).$reset;
-        $weekBar = $barFg.str_repeat('█', $weekFilled).$barDim.str_repeat('░', 30 - $weekFilled).$reset;
-
-        $this->infoWidget->setText(\sprintf(
-            "%sDay%s   %s  %s%4.1f%%%s\n%sWeek%s  %s  %s%4.1f%%%s  %s(%s)%s",
-            $dim.$gray, $reset, $dayBar, $gray, $dayPct, $reset,
-            $dim.$gray, $reset, $weekBar, $gray, $weekPct, $reset,
-            $dim.$gray, date('l'), $reset,
-        ));
-
-        $this->statusText->setText(\sprintf(
-            '[t] theme (%s)    [s] seconds %s    [h] 12/24h    [q/ctrl+c] quit',
-            $theme['name'],
-            $this->showSeconds ? 'on' : 'off',
-        ));
+        $this->statusText->setText($this->buildHint());
 
         $this->invalidate();
+    }
+
+    private function buildHint(): string
+    {
+        $key = new Style(bold: true, color: 'white');
+        $val = new Style(color: 'gray');
+        $theme = self::THEMES[$this->themeIndex];
+
+        return implode('    ', [
+            $key->apply('[t]').' '.$val->apply($theme['name']),
+            $key->apply('[s]').' '.$val->apply($this->showSeconds ? 'sec on' : 'sec off'),
+            $key->apply('[h]').' '.$val->apply($this->show24h ? '24h' : '12h'),
+            $key->apply('[q]').' '.$val->apply('quit'),
+        ]);
     }
 }
