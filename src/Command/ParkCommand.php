@@ -28,7 +28,7 @@ final class ParkCommand
 
         $tui = new Tui($stylesheet);
 
-        $game   = new ParkGame(startingMoney: 2000);
+        $game = new ParkGame(startingMoney: 2000);
         $widget = new ParkWidget($game);
 
         $tui->add($widget);

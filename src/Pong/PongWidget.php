@@ -36,16 +36,16 @@ class PongWidget extends AbstractWidget implements FocusableInterface
 
     public function __construct(private readonly PongGame $game)
     {
-        $this->stylePaddle1    = new Style(color: 'bright_cyan', bold: true);
-        $this->stylePaddle2    = new Style(color: 'bright_magenta', bold: true);
-        $this->styleBall       = new Style(color: 'bright_yellow', bold: true);
-        $this->styleNet        = new Style(dim: true);
-        $this->styleOverlay    = new Style(reverse: true, bold: true);
-        $this->styleSeparator  = new Style(dim: true);
-        $this->styleStatus     = new Style(dim: true);
+        $this->stylePaddle1 = new Style(color: 'bright_cyan', bold: true);
+        $this->stylePaddle2 = new Style(color: 'bright_magenta', bold: true);
+        $this->styleBall = new Style(color: 'bright_yellow', bold: true);
+        $this->styleNet = new Style(dim: true);
+        $this->styleOverlay = new Style(reverse: true, bold: true);
+        $this->styleSeparator = new Style(dim: true);
+        $this->styleStatus = new Style(dim: true);
         $this->styleP1Highlight = new Style(color: 'bright_cyan');
         $this->styleP2Highlight = new Style(color: 'bright_magenta');
-        $this->styleError      = new Style(color: 'bright_red');
+        $this->styleError = new Style(color: 'bright_red');
     }
 
     // -------------------------------------------------------------------------
@@ -55,13 +55,13 @@ class PongWidget extends AbstractWidget implements FocusableInterface
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'p1_up'   => ['w', 'z'],
+            'p1_up' => ['w', 'z'],
             'p1_down' => ['s'],
-            'p2_up'   => [Key::UP],
+            'p2_up' => [Key::UP],
             'p2_down' => [Key::DOWN],
-            'pause'   => ['p', Key::SPACE],
+            'pause' => ['p', Key::SPACE],
             'restart' => ['r'],
-            'quit'    => [Key::ctrl('c'), 'q'],
+            'quit' => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -98,34 +98,30 @@ class PongWidget extends AbstractWidget implements FocusableInterface
 
     public function render(RenderContext $context): array
     {
-        $cols       = $this->game->getCols();
-        $rows       = $this->game->getRows();
+        $cols = $this->game->getCols();
+        $rows = $this->game->getRows();
         $innerWidth = $cols * 2;
 
         if ($context->getColumns() < $innerWidth) {
             return [$this->styleError->apply('Terminal too small!')];
         }
 
-        $ballX   = $this->game->getBallX();
-        $ballY   = $this->game->getBallY();
-        $p1Y     = $this->game->getPaddle1Y();
-        $p2Y     = $this->game->getPaddle2Y();
+        $ballX = $this->game->getBallX();
+        $ballY = $this->game->getBallY();
+        $p1Y = $this->game->getPaddle1Y();
+        $p2Y = $this->game->getPaddle2Y();
         $paddleH = $this->game->getPaddleHeight();
-        $midX    = (int) ($cols / 2);
+        $midX = (int) ($cols / 2);
 
         $lines = [];
         for ($y = 0; $y < $rows; ++$y) {
             $row = '';
             for ($x = 0; $x < $cols; ++$x) {
                 $row .= match (true) {
-                    $x === $ballX && $y === $ballY
-                        => $this->styleBall->apply('🎾'),
-                    $x === 0 && $y >= $p1Y && $y < $p1Y + $paddleH
-                        => $this->stylePaddle1->apply('██'),
-                    $x === $cols - 1 && $y >= $p2Y && $y < $p2Y + $paddleH
-                        => $this->stylePaddle2->apply('██'),
-                    $x === $midX && $y % 2 === 0
-                        => $this->styleNet->apply('│ '),
+                    $x === $ballX && $y === $ballY => $this->styleBall->apply('🎾'),
+                    0 === $x && $y >= $p1Y && $y < $p1Y + $paddleH => $this->stylePaddle1->apply('██'),
+                    $x === $cols - 1 && $y >= $p2Y && $y < $p2Y + $paddleH => $this->stylePaddle2->apply('██'),
+                    $x === $midX && 0 === $y % 2 => $this->styleNet->apply('│ '),
                     default => '  ',
                 };
             }
@@ -162,8 +158,8 @@ class PongWidget extends AbstractWidget implements FocusableInterface
             $left .= '  '.$this->styleP1Highlight->apply('[PAUSED]');
         } elseif (GameState::GameOver === $state) {
             $winner = $this->game->getWinner();
-            $style  = 1 === $winner ? $this->styleP1Highlight : $this->styleP2Highlight;
-            $left  .= '  '.$style->apply(\sprintf('[P%d WINS]', $winner));
+            $style = 1 === $winner ? $this->styleP1Highlight : $this->styleP2Highlight;
+            $left .= '  '.$style->apply(\sprintf('[P%d WINS]', $winner));
         }
 
         $hint = 'W-Z/S ↑↓  P R Q';
@@ -192,7 +188,7 @@ class PongWidget extends AbstractWidget implements FocusableInterface
             $texts = ['', '  PAUSE  ', '  P to resume  ', ''];
         } else {
             $winner = $this->game->getWinner();
-            $texts  = [
+            $texts = [
                 '',
                 \sprintf('  PLAYER %d WINS!  ', $winner),
                 \sprintf('  %d — %d  ', $this->game->getScore1(), $this->game->getScore2()),
@@ -215,9 +211,9 @@ class PongWidget extends AbstractWidget implements FocusableInterface
             $padded = mb_str_pad($text, $overlayW);
             $styled = $this->styleOverlay->apply($padded);
 
-            $plain  = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
+            $plain = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
             $before = mb_substr((string) $plain, 0, $startCol);
-            $after  = mb_substr((string) $plain, $startCol + $overlayW);
+            $after = mb_substr((string) $plain, $startCol + $overlayW);
 
             $lines[$lineIdx] = $before.$styled.$after;
         }

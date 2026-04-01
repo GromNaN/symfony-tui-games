@@ -43,7 +43,7 @@ final class SpaceCommand
 
         $tui = new Tui($stylesheet);
 
-        $game   = new SpaceGame();
+        $game = new SpaceGame();
         $widget = new SpaceWidget($game);
 
         $tui->add($widget);

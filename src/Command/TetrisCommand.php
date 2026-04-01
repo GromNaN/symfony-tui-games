@@ -43,7 +43,7 @@ final class TetrisCommand
 
         $tui = new Tui($stylesheet);
 
-        $game   = new TetrisGame();
+        $game = new TetrisGame();
         $widget = new TetrisWidget($game);
 
         $tui->add($widget);

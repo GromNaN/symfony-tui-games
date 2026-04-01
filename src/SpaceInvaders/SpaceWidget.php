@@ -27,21 +27,21 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     use KeybindingsTrait;
     use QuitableTrait;
 
-    private const R    = "\033[0m";
-    private const DIM  = "\033[2m";
+    private const R = "\033[0m";
+    private const DIM = "\033[2m";
     private const BOLD = "\033[1m";
 
     // Colours
-    private const C_RED    = "\033[91m";   // bright red   — enemy bullets
+    private const C_RED = "\033[91m";   // bright red   — enemy bullets
     private const C_YELLOW = "\033[93m";   // bright yellow — wave label
-    private const C_WHITE  = "\033[97m";   // bright white  — player bullets + lives
+    private const C_WHITE = "\033[97m";   // bright white  — player bullets + lives
 
-    private readonly Style  $styleOverlay;
+    private readonly Style $styleOverlay;
     private readonly Border $overlayBorder;
 
     public function __construct(private readonly SpaceGame $game)
     {
-        $this->styleOverlay  = new Style(reverse: true);
+        $this->styleOverlay = new Style(reverse: true);
         $this->overlayBorder = Border::from([1], BorderPattern::ROUNDED, 'bright_white');
     }
 
@@ -52,12 +52,12 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'left'    => [Key::LEFT,  'a'],
-            'right'   => [Key::RIGHT, 'd'],
-            'shoot'   => [Key::SPACE, Key::UP, 'w'],
-            'pause'   => ['p'],
+            'left' => [Key::LEFT,  'a'],
+            'right' => [Key::RIGHT, 'd'],
+            'shoot' => [Key::SPACE, Key::UP, 'w'],
+            'pause' => ['p'],
             'restart' => ['r'],
-            'quit'    => [Key::ctrl('c'), 'q'],
+            'quit' => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -90,9 +90,9 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
 
     public function render(RenderContext $context): array
     {
-        $W         = SpaceGame::GAME_W;
-        $H         = SpaceGame::GAME_H;
-        $minWidth  = $W * 2; // 60 inner cols (border drawn by Renderer)
+        $W = SpaceGame::GAME_W;
+        $H = SpaceGame::GAME_H;
+        $minWidth = $W * 2; // 60 inner cols (border drawn by Renderer)
         $minHeight = $H + 3; // 23
 
         if ($context->getColumns() < $minWidth) {
@@ -165,12 +165,12 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
 
         // Overlay via Compositor
         $state = $this->game->getState();
-        if ($state !== GameState::Playing) {
+        if (GameState::Playing !== $state) {
             $texts = match ($state) {
-                GameState::Paused      => ['', '  [ PAUSE ]  ', '  [P] Resume  [R] Restart  ', ''],
-                GameState::GameOver    => ['', '  GAME  OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  [R] Play again  ', ''],
+                GameState::Paused => ['', '  [ PAUSE ]  ', '  [P] Resume  [R] Restart  ', ''],
+                GameState::GameOver => ['', '  GAME  OVER  ', \sprintf('  Score: %d  ', $this->game->getScore()), '  [R] Play again  ', ''],
                 GameState::WaveCleared => ['', \sprintf('  WAVE %d CLEARED!  ', $this->game->getWave()), '  Next wave...  ', ''],
-                default                => [],
+                default => [],
             };
 
             if ([] !== $texts) {
@@ -180,15 +180,15 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
                 // Build content lines (uniform width, reverse-video)
                 $contentLines = [];
                 foreach ($texts as $text) {
-                    $textLen        = AnsiUtils::visibleWidth($text);
-                    $padded         = $text.str_repeat(' ', $overlayW - $textLen);
+                    $textLen = AnsiUtils::visibleWidth($text);
+                    $padded = $text.str_repeat(' ', $overlayW - $textLen);
                     $contentLines[] = $this->styleOverlay->apply($padded);
                 }
 
                 // Wrap with a rounded border (+1 row top/bottom, +1 col left/right)
                 $overlayLines = $this->overlayBorder->wrapLines($contentLines, $overlayW, $this->styleOverlay);
-                $borderedW    = $overlayW + 2;
-                $borderedH    = $overlayH + 2;
+                $borderedW = $overlayW + 2;
+                $borderedH = $overlayH + 2;
 
                 $overlayRow = (int) (($H - $borderedH) / 2);
                 $overlayCol = (int) (($W * 2 - $borderedW) / 2);
@@ -215,9 +215,9 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     private function invaderGlyph(int $row): string
     {
         return match ($row) {
-            0       => '👾',  // alien monster  (30 pts)
-            1       => '🦑',  // squid          (20 pts)
-            2       => '🦀',  // crab           (10 pts)
+            0 => '👾',  // alien monster  (30 pts)
+            1 => '🦑',  // squid          (20 pts)
+            2 => '🦀',  // crab           (10 pts)
             default => '🐙',  // octopus        (10 pts)
         };
     }
@@ -225,16 +225,16 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
     private function buildScoreRow(int $innerWidth): string
     {
         $score = 'SCORE: '.$this->game->getScore();
-        $wave  = 'WAVE '.$this->game->getWave();
+        $wave = 'WAVE '.$this->game->getWave();
         $lives = 'LIVES: '.str_repeat('🚀', $this->game->getLives());
 
-        $waveLen   = AnsiUtils::visibleWidth($wave);
-        $leftLen   = AnsiUtils::visibleWidth($score);
-        $rightLen  = AnsiUtils::visibleWidth($lives);
-        $midLeft   = (int) (($innerWidth - $waveLen) / 2);
-        $midRight  = $innerWidth - $waveLen - $midLeft;
-        $leftPad   = $midLeft - $leftLen;
-        $rightPad  = $midRight - $rightLen;
+        $waveLen = AnsiUtils::visibleWidth($wave);
+        $leftLen = AnsiUtils::visibleWidth($score);
+        $rightLen = AnsiUtils::visibleWidth($lives);
+        $midLeft = (int) (($innerWidth - $waveLen) / 2);
+        $midRight = $innerWidth - $waveLen - $midLeft;
+        $leftPad = $midLeft - $leftLen;
+        $rightPad = $midRight - $rightLen;
 
         return self::BOLD.$score.self::R
             .str_repeat(' ', max(0, $leftPad))

@@ -34,7 +34,7 @@ class PongGame
         $this->score1 = 0;
         $this->score2 = 0;
         $this->state = GameState::Playing;
-        $this->serveBall(random_int(0, 1) === 0 ? 1 : -1);
+        $this->serveBall(0 === random_int(0, 1) ? 1 : -1);
     }
 
     public function step(): void
@@ -110,27 +110,60 @@ class PongGame
         };
     }
 
-    public function getCols(): int { return $this->cols; }
+    public function getCols(): int
+    {
+        return $this->cols;
+    }
 
-    public function getRows(): int { return $this->rows; }
+    public function getRows(): int
+    {
+        return $this->rows;
+    }
 
-    public function getScore1(): int { return $this->score1; }
+    public function getScore1(): int
+    {
+        return $this->score1;
+    }
 
-    public function getScore2(): int { return $this->score2; }
+    public function getScore2(): int
+    {
+        return $this->score2;
+    }
 
-    public function getState(): GameState { return $this->state; }
+    public function getState(): GameState
+    {
+        return $this->state;
+    }
 
-    public function getPaddle1Y(): int { return $this->paddle1Y; }
+    public function getPaddle1Y(): int
+    {
+        return $this->paddle1Y;
+    }
 
-    public function getPaddle2Y(): int { return $this->paddle2Y; }
+    public function getPaddle2Y(): int
+    {
+        return $this->paddle2Y;
+    }
 
-    public function getBallX(): int { return $this->ballX; }
+    public function getBallX(): int
+    {
+        return $this->ballX;
+    }
 
-    public function getBallY(): int { return $this->ballY; }
+    public function getBallY(): int
+    {
+        return $this->ballY;
+    }
 
-    public function getPaddleHeight(): int { return self::PADDLE_HEIGHT; }
+    public function getPaddleHeight(): int
+    {
+        return self::PADDLE_HEIGHT;
+    }
 
-    public function getWinScore(): int { return self::WIN_SCORE; }
+    public function getWinScore(): int
+    {
+        return self::WIN_SCORE;
+    }
 
     public function getWinner(): ?int
     {
@@ -146,7 +179,7 @@ class PongGame
         $this->ballX = (int) ($this->cols / 2);
         $this->ballY = (int) ($this->rows / 2);
         $this->ballDx = $direction;
-        $this->ballDy = random_int(0, 1) === 0 ? -1 : 1;
+        $this->ballDy = 0 === random_int(0, 1) ? -1 : 1;
     }
 
     private function scorePoint(int $player): void

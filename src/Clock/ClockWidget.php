@@ -4,8 +4,6 @@ namespace App\Clock;
 
 use Symfony\Component\Tui\Input\Key;
 use Symfony\Component\Tui\Style\Style;
-
-use function Symfony\Component\Clock\now;
 use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
@@ -15,6 +13,8 @@ use Symfony\Component\Tui\Widget\QuitableTrait;
 use Symfony\Component\Tui\Widget\ScheduledTickTrait;
 use Symfony\Component\Tui\Widget\TextWidget;
 use Symfony\Component\Tui\Widget\WidgetContext;
+
+use function Symfony\Component\Clock\now;
 
 /**
  * Retro digital clock widget.
@@ -154,10 +154,10 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'theme'   => ['t'],
+            'theme' => ['t'],
             'seconds' => ['s'],
-            'format'  => ['h'],
-            'quit'    => [Key::ctrl('c'), 'q'],
+            'format' => ['h'],
+            'quit' => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -243,10 +243,10 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         }
         $this->lastTime = $time;
 
-        $dt  = now();
-        $h   = (int) $dt->format('G');
-        $m   = (int) $dt->format('i');
-        $s   = (int) $dt->format('s');
+        $dt = now();
+        $h = (int) $dt->format('G');
+        $m = (int) $dt->format('i');
+        $s = (int) $dt->format('s');
         $dow = (int) $dt->format('N'); // 1=Mon … 7=Sun
 
         $this->timeWidget->setText($time);

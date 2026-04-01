@@ -38,14 +38,14 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
 
     public function __construct(private readonly SnakeGame $game)
     {
-        $this->styleHead            = new Style(color: 'bright_green', bold: true);
-        $this->styleBody            = new Style(color: 'green');
-        $this->styleFood            = new Style(color: 'bright_red');
-        $this->styleOverlay         = new Style(reverse: true, bold: true);
-        $this->styleSeparator       = new Style(dim: true);
-        $this->styleStatus          = new Style(dim: true);
+        $this->styleHead = new Style(color: 'bright_green', bold: true);
+        $this->styleBody = new Style(color: 'green');
+        $this->styleFood = new Style(color: 'bright_red');
+        $this->styleOverlay = new Style(reverse: true, bold: true);
+        $this->styleSeparator = new Style(dim: true);
+        $this->styleStatus = new Style(dim: true);
         $this->styleStatusHighlight = new Style(color: 'yellow');
-        $this->styleError           = new Style(color: 'bright_red');
+        $this->styleError = new Style(color: 'bright_red');
     }
 
     // -------------------------------------------------------------------------
@@ -55,13 +55,13 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'move_up'    => [Key::UP,    'w'],
-            'move_down'  => [Key::DOWN,  's'],
-            'move_left'  => [Key::LEFT,  'a'],
+            'move_up' => [Key::UP,    'w'],
+            'move_down' => [Key::DOWN,  's'],
+            'move_left' => [Key::LEFT,  'a'],
             'move_right' => [Key::RIGHT, 'd'],
-            'pause'      => ['p', Key::SPACE],
-            'restart'    => ['r'],
-            'quit'       => [Key::ctrl('c'), 'q'],
+            'pause' => ['p', Key::SPACE],
+            'restart' => ['r'],
+            'quit' => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -136,8 +136,8 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
 
         // Build lookup structures.
         $snakeBody = $this->game->getSnake();
-        $head      = $snakeBody[0] ?? null;
-        $bodySet   = [];
+        $head = $snakeBody[0] ?? null;
+        $bodySet = [];
         foreach (\array_slice($snakeBody, 1) as [$bx, $by]) {
             $bodySet["$bx,$by"] = true;
         }
@@ -150,9 +150,9 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
             for ($x = 0; $x < $cols; ++$x) {
                 $row .= match (true) {
                     null !== $head && $head[0] === $x && $head[1] === $y => $this->styleHead->apply('██'),
-                    isset($bodySet["$x,$y"])                             => $this->styleBody->apply('██'),
-                    $x === $fx && $y === $fy                             => $this->styleFood->apply('██'),
-                    default                                               => '  ',
+                    isset($bodySet["$x,$y"]) => $this->styleBody->apply('██'),
+                    $x === $fx && $y === $fy => $this->styleFood->apply('██'),
+                    default => '  ',
                 };
             }
             $lines[] = $row;
@@ -176,9 +176,9 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
 
     private function buildStatusLine(int $width): string
     {
-        $score  = $this->game->getScore();
+        $score = $this->game->getScore();
         $length = $this->game->getLength();
-        $state  = $this->game->getState();
+        $state = $this->game->getState();
 
         $left = \sprintf('Score: %d  Length: %d', $score, $length);
         if (GameState::Paused === $state) {
@@ -193,7 +193,7 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
         $leftLen = mb_strlen(\sprintf('Score: %d  Length: %d', $score, $length))
             + (GameState::Playing !== $state ? 2 + mb_strlen(GameState::Paused === $state ? '[PAUSED]' : '[GAME OVER]') : 0);
         $hintLen = mb_strlen($hint);
-        $pad     = max(1, $width - $leftLen - $hintLen);
+        $pad = max(1, $width - $leftLen - $hintLen);
 
         return $this->styleStatus->apply($left.str_repeat(' ', $pad).$hint);
     }
@@ -223,9 +223,9 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
             $padded = mb_str_pad($text, $overlayW);
             $styled = $this->styleOverlay->apply($padded);
 
-            $plain  = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
+            $plain = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
             $before = mb_substr((string) $plain, 0, $startCol);
-            $after  = mb_substr((string) $plain, $startCol + $overlayW);
+            $after = mb_substr((string) $plain, $startCol + $overlayW);
 
             $lines[$lineIdx] = $before.$styled.$after;
         }

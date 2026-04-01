@@ -9,7 +9,7 @@ class ParkGame
     public const ENTRANCE_X = 10;
     public const ENTRANCE_Y = 13;
     private const MAX_VISITORS = 15;
-    private const VISIT_COOLDOWN = 8; // ticks before re-using same attraction
+    private const VISIT_COOLDOWN = 8; // ticks before reusing same attraction
 
     /** @var array<int, array<int, TileType>> [y][x] */
     private array $map;
@@ -73,7 +73,7 @@ class ParkGame
         if (!$this->hasPathAdjacentToEntrance()) {
             return;
         }
-        if (random_int(0, 2) === 0) {
+        if (0 === random_int(0, 2)) {
             return; // ~33% skip
         }
 
@@ -87,7 +87,7 @@ class ParkGame
         foreach ([[-1, 0], [1, 0], [0, -1]] as [$dx, $dy]) {
             $nx = self::ENTRANCE_X + $dx;
             $ny = self::ENTRANCE_Y + $dy;
-            if ($this->inBounds($nx, $ny) && $this->map[$ny][$nx] !== TileType::Grass) {
+            if ($this->inBounds($nx, $ny) && TileType::Grass !== $this->map[$ny][$nx]) {
                 return true;
             }
         }
@@ -169,7 +169,7 @@ class ParkGame
         foreach ($dirs as [$dx, $dy]) {
             $nx = $visitor->x + $dx;
             $ny = $visitor->y + $dy;
-            if ($this->inBounds($nx, $ny) && $this->map[$ny][$nx] !== TileType::Grass) {
+            if ($this->inBounds($nx, $ny) && TileType::Grass !== $this->map[$ny][$nx]) {
                 $visitor->x = $nx;
                 $visitor->y = $ny;
 
@@ -200,7 +200,7 @@ class ParkGame
         }
 
         $current = $this->map[$this->cursorY][$this->cursorX];
-        if ($current !== TileType::Grass) {
+        if (TileType::Grass !== $current) {
             $this->lastEvent = 'Case deja occupee !';
 
             return;
@@ -249,19 +249,61 @@ class ParkGame
     // Getters
     // -------------------------------------------------------------------------
 
-    public function getMoney(): int { return $this->money; }
-    public function getTick(): int { return $this->tick; }
-    public function getVisitorCount(): int { return \count($this->visitors); }
-    public function getTotalVisitors(): int { return $this->totalVisitors; }
-    public function getTotalRevenue(): int { return $this->totalRevenue; }
-    public function getBuildMode(): BuildMode { return $this->buildMode; }
-    public function getCursorX(): int { return $this->cursorX; }
-    public function getCursorY(): int { return $this->cursorY; }
-    public function isPaused(): bool { return $this->paused; }
-    public function getLastEvent(): string { return $this->lastEvent; }
+    public function getMoney(): int
+    {
+        return $this->money;
+    }
+
+    public function getTick(): int
+    {
+        return $this->tick;
+    }
+
+    public function getVisitorCount(): int
+    {
+        return \count($this->visitors);
+    }
+
+    public function getTotalVisitors(): int
+    {
+        return $this->totalVisitors;
+    }
+
+    public function getTotalRevenue(): int
+    {
+        return $this->totalRevenue;
+    }
+
+    public function getBuildMode(): BuildMode
+    {
+        return $this->buildMode;
+    }
+
+    public function getCursorX(): int
+    {
+        return $this->cursorX;
+    }
+
+    public function getCursorY(): int
+    {
+        return $this->cursorY;
+    }
+
+    public function isPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    public function getLastEvent(): string
+    {
+        return $this->lastEvent;
+    }
 
     /** @return list<Visitor> */
-    public function getVisitors(): array { return $this->visitors; }
+    public function getVisitors(): array
+    {
+        return $this->visitors;
+    }
 
     public function getTileAt(int $x, int $y): TileType
     {

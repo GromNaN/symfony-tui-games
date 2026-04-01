@@ -49,7 +49,7 @@ final class SnakeCommand
 
         $tui = new Tui($stylesheet);
 
-        $game   = new SnakeGame(cols: $cols, rows: $rows);
+        $game = new SnakeGame(cols: $cols, rows: $rows);
         $widget = new SnakeWidget($game);
 
         $tui->add($widget);

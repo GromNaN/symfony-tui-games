@@ -46,7 +46,7 @@ final class PongCommand
 
         $tui = new Tui($stylesheet);
 
-        $game   = new PongGame(cols: $cols, rows: $rows);
+        $game = new PongGame(cols: $cols, rows: $rows);
         $widget = new PongWidget($game);
 
         $tui->add($widget);

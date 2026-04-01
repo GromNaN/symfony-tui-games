@@ -48,13 +48,13 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
         }
         $this->pieceStyles = $styles;
 
-        $this->styleGhost     = new Style(dim: true);
-        $this->styleOverlay   = new Style(reverse: true, bold: true);
+        $this->styleGhost = new Style(dim: true);
+        $this->styleOverlay = new Style(reverse: true, bold: true);
         $this->styleSeparator = new Style(dim: true);
-        $this->styleStatus    = new Style(dim: true);
-        $this->styleLabel     = new Style(dim: true);
-        $this->styleValue     = new Style(color: 'yellow', bold: true);
-        $this->styleError     = new Style(color: 'bright_red');
+        $this->styleStatus = new Style(dim: true);
+        $this->styleLabel = new Style(dim: true);
+        $this->styleValue = new Style(color: 'yellow', bold: true);
+        $this->styleError = new Style(color: 'bright_red');
     }
 
     // -------------------------------------------------------------------------
@@ -64,14 +64,14 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'move_left'  => [Key::LEFT,  'a'],
+            'move_left' => [Key::LEFT,  'a'],
             'move_right' => [Key::RIGHT, 'd'],
-            'rotate'     => [Key::UP,    'w'],
-            'soft_drop'  => [Key::DOWN,  's'],
-            'hard_drop'  => [Key::SPACE],
-            'pause'      => ['p'],
-            'restart'    => ['r'],
-            'quit'       => [Key::ctrl('c'), 'q'],
+            'rotate' => [Key::UP,    'w'],
+            'soft_drop' => [Key::DOWN,  's'],
+            'hard_drop' => [Key::SPACE],
+            'pause' => ['p'],
+            'restart' => ['r'],
+            'quit' => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -149,13 +149,13 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
             return [$this->styleError->apply('Terminal too small!')];
         }
 
-        $rows  = $this->game->getRows();
-        $cols  = $this->game->getCols();
+        $rows = $this->game->getRows();
+        $cols = $this->game->getCols();
         $board = $this->game->getBoard();
 
         // Build lookup sets for the falling piece and its ghost.
         $currentCells = [];
-        $ghostCells   = [];
+        $ghostCells = [];
 
         if (GameState::GameOver !== $this->game->getState()) {
             foreach ($this->game->getCurrentCells() as [$r, $c]) {
@@ -178,9 +178,9 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
                 $key = "$y,$x";
                 $row .= match (true) {
                     isset($currentCells[$key]) => $this->pieceStyles[$currentPiece->value]->apply('██'),
-                    isset($ghostCells[$key])   => $this->styleGhost->apply('░░'),
-                    null !== $board[$y][$x]    => $this->pieceStyles[$board[$y][$x]->value]->apply('██'),
-                    default                    => '  ',
+                    isset($ghostCells[$key]) => $this->styleGhost->apply('░░'),
+                    null !== $board[$y][$x] => $this->pieceStyles[$board[$y][$x]->value]->apply('██'),
+                    default => '  ',
                 };
             }
             $boardLines[] = $row;
@@ -218,9 +218,9 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
         // Next-piece preview.
         $lines[0] = $this->styleLabel->apply('NEXT');
 
-        $next      = $this->game->getNextPiece();
+        $next = $this->game->getNextPiece();
         $nextCells = $next->cells(0);
-        $nextSize  = $next->size();
+        $nextSize = $next->size();
         $nextStyle = $this->pieceStyles[$next->value];
 
         for ($r = 0; $r < $nextSize; ++$r) {
@@ -239,10 +239,10 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
         }
 
         // Stats — fixed row positions (max next-piece height = 4 rows + header).
-        $lines[6]  = $this->styleLabel->apply('SCORE');
-        $lines[7]  = $this->styleValue->apply((string) $this->game->getScore());
+        $lines[6] = $this->styleLabel->apply('SCORE');
+        $lines[7] = $this->styleValue->apply((string) $this->game->getScore());
 
-        $lines[9]  = $this->styleLabel->apply('LEVEL');
+        $lines[9] = $this->styleLabel->apply('LEVEL');
         $lines[10] = $this->styleValue->apply((string) $this->game->getLevel());
 
         $lines[12] = $this->styleLabel->apply('LINES');
@@ -258,8 +258,8 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
     private function buildStatusLine(int $width): string
     {
         $hint = match ($this->game->getState()) {
-            GameState::Playing  => '←→ ↑Rot ↓ Space  P Q',
-            GameState::Paused   => 'P Resume  Q Quit',
+            GameState::Playing => '←→ ↑Rot ↓ Space  P Q',
+            GameState::Paused => 'P Resume  Q Quit',
             GameState::GameOver => 'R Restart  Q Quit',
         };
 
@@ -291,9 +291,9 @@ class TetrisWidget extends AbstractWidget implements FocusableInterface
             $padded = mb_str_pad($text, $overlayW);
             $styled = $this->styleOverlay->apply($padded);
 
-            $plain  = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
+            $plain = preg_replace('/\033\[[0-9;]*m/', '', $lines[$lineIdx]);
             $before = mb_substr((string) $plain, 0, $startCol);
-            $after  = mb_substr((string) $plain, $startCol + $overlayW);
+            $after = mb_substr((string) $plain, $startCol + $overlayW);
 
             $lines[$lineIdx] = $before.$styled.$after;
         }
