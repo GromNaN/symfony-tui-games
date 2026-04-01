@@ -42,7 +42,6 @@ final class SpaceCommand
         ]);
 
         $tui = new Tui($stylesheet);
-        $tui->quitOn('ctrl+c', 'q');
 
         $game   = new SpaceGame();
         $widget = new SpaceWidget($game);
@@ -50,6 +49,7 @@ final class SpaceCommand
         $tui->add($widget);
         $tui->setFocus($widget);
 
+        // Space Invaders drives its physics via delta-time, so it still needs onTick.
         $tui->onTick(function (TickEvent $event) use ($game, $widget): void {
             $game->tick($event->getDeltaTime());
             $widget->invalidate();

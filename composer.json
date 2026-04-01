@@ -15,10 +15,10 @@
         "ext-iconv": "*",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.10",
         "symfony/framework-bundle": "8.0.*",
         "symfony/runtime": "8.0.*",
-        "symfony/tui": "*",
+        "symfony/tui": ">=8.1",
         "symfony/yaml": "8.0.*"
     },
     "require-dev": {
@@ -60,9 +60,11 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
         },
         "post-install-cmd": [
+            "git submodule update --init",
             "@auto-scripts"
         ],
         "post-update-cmd": [
+            "git submodule update --init",
             "@auto-scripts"
         ]
     },

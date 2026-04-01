@@ -8,6 +8,9 @@ use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
+use Symfony\Component\Tui\Widget\QuitableTrait;
+use Symfony\Component\Tui\Widget\ScheduledTickTrait;
+use Symfony\Component\Tui\Widget\WidgetContext;
 
 /**
  * Full-screen park management widget.
@@ -23,6 +26,8 @@ class ParkWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
     use KeybindingsTrait;
+    use QuitableTrait;
+    use ScheduledTickTrait;
 
     private const R    = "\033[0m";
     private const DIM  = "\033[2m";
@@ -54,6 +59,7 @@ class ParkWidget extends AbstractWidget implements FocusableInterface
             'mode_toilet'  => ['4'],
             'mode_demolish'=> ['D', 'd'],  // 'd' also moves cursor left, but D (shift) = demolish mode
             'pause'        => ['p', Key::SPACE],
+            'quit'         => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -85,9 +91,38 @@ class ParkWidget extends AbstractWidget implements FocusableInterface
             $this->game->setBuildMode(BuildMode::Demolish);
         } elseif ($kb->matches($data, 'pause')) {
             $this->game->togglePause();
+        } elseif ($kb->matches($data, 'quit')) {
+            $this->dispatchQuit();
+
+            return;
         }
 
         $this->invalidate();
+    }
+
+    // -------------------------------------------------------------------------
+    // Scheduling
+    // -------------------------------------------------------------------------
+
+    protected function resolveScheduledTickContext(): ?WidgetContext
+    {
+        return $this->getContext();
+    }
+
+    protected function onScheduledTick(): void
+    {
+        $this->game->tick();
+        $this->invalidate();
+    }
+
+    protected function onAttach(WidgetContext $context): void
+    {
+        $this->startScheduledTick(0.25);
+    }
+
+    protected function onDetach(): void
+    {
+        $this->stopScheduledTick();
     }
 
     // -------------------------------------------------------------------------

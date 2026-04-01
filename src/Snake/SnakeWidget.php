@@ -9,6 +9,9 @@ use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
+use Symfony\Component\Tui\Widget\QuitableTrait;
+use Symfony\Component\Tui\Widget\ScheduledTickTrait;
+use Symfony\Component\Tui\Widget\WidgetContext;
 
 /**
  * Snake game widget.
@@ -20,6 +23,8 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
     use KeybindingsTrait;
+    use QuitableTrait;
+    use ScheduledTickTrait;
 
     // Cell / UI styles — initialised once, reused every frame.
     private readonly Style $styleHead;
@@ -56,6 +61,7 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
             'move_right' => [Key::RIGHT, 'd'],
             'pause'      => ['p', Key::SPACE],
             'restart'    => ['r'],
+            'quit'       => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -77,7 +83,41 @@ class SnakeWidget extends AbstractWidget implements FocusableInterface
         } elseif ($kb->matches($data, 'restart') && GameState::GameOver === $this->game->getState()) {
             $this->game->reset();
             $this->invalidate();
+        } elseif ($kb->matches($data, 'quit')) {
+            $this->dispatchQuit();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Scheduling
+    // -------------------------------------------------------------------------
+
+    protected function resolveScheduledTickContext(): ?WidgetContext
+    {
+        return $this->getContext();
+    }
+
+    protected function onScheduledTick(): void
+    {
+        if (GameState::Playing !== $this->game->getState()) {
+            return;
+        }
+
+        // Reschedule if the speed changed.
+        $this->startScheduledTick($this->game->getStepIntervalMs() / 1000.0);
+
+        $this->game->step();
+        $this->invalidate();
+    }
+
+    protected function onAttach(WidgetContext $context): void
+    {
+        $this->startScheduledTick($this->game->getStepIntervalMs() / 1000.0);
+    }
+
+    protected function onDetach(): void
+    {
+        $this->stopScheduledTick();
     }
 
     // -------------------------------------------------------------------------

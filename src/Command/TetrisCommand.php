@@ -9,7 +9,6 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Tui\Event\TickEvent;
 use Symfony\Component\Tui\Style\Align;
 use Symfony\Component\Tui\Style\Border;
 use Symfony\Component\Tui\Style\BorderPattern;
@@ -43,31 +42,12 @@ final class TetrisCommand
         ]);
 
         $tui = new Tui($stylesheet);
-        $tui->quitOn('ctrl+c', 'q');
 
         $game   = new TetrisGame();
         $widget = new TetrisWidget($game);
 
         $tui->add($widget);
         $tui->setFocus($widget);
-
-        $elapsed = 0.0;
-
-        $tui->onTick(function (TickEvent $event) use ($game, $widget, &$elapsed): void {
-            if (GameState::Playing === $game->getState()) {
-                $elapsed += $event->getDeltaTime();
-                $intervalSec = $game->getStepIntervalMs() / 1000.0;
-
-                if ($elapsed >= $intervalSec) {
-                    $elapsed -= $intervalSec;
-                    $game->step();
-                    $widget->invalidate();
-                }
-            }
-
-            $event->setBusy();
-        });
-
         $tui->run();
 
         if (GameState::GameOver === $game->getState()) {

@@ -1,0 +1,5 @@
+[submodule "vendor-src/symfony"]
+	path = vendor-src/symfony
+	url = https://github.com/fabpot/symfony.git
+	branch = tui
+	shallow = true

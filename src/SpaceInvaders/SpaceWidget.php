@@ -14,6 +14,7 @@ use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
+use Symfony\Component\Tui\Widget\QuitableTrait;
 
 /**
  * Space Invaders TUI widget.
@@ -24,6 +25,7 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
     use KeybindingsTrait;
+    use QuitableTrait;
 
     private const R    = "\033[0m";
     private const DIM  = "\033[2m";
@@ -55,6 +57,7 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             'shoot'   => [Key::SPACE, Key::UP, 'w'],
             'pause'   => ['p'],
             'restart' => ['r'],
+            'quit'    => [Key::ctrl('c'), 'q'],
         ];
     }
 
@@ -72,6 +75,10 @@ class SpaceWidget extends AbstractWidget implements FocusableInterface
             $this->game->togglePause();
         } elseif ($kb->matches($data, 'restart')) {
             $this->game->reset();
+        } elseif ($kb->matches($data, 'quit')) {
+            $this->dispatchQuit();
+
+            return;
         }
 
         $this->invalidate();
