@@ -119,7 +119,7 @@ class PongWidget extends AbstractWidget implements FocusableInterface
             for ($x = 0; $x < $cols; ++$x) {
                 $row .= match (true) {
                     $x === $ballX && $y === $ballY
-                        => $this->styleBall->apply('██'),
+                        => $this->styleBall->apply('🎾'),
                     $x === 0 && $y >= $p1Y && $y < $p1Y + $paddleH
                         => $this->stylePaddle1->apply('██'),
                     $x === $cols - 1 && $y >= $p2Y && $y < $p2Y + $paddleH
