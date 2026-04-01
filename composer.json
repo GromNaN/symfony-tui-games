@@ -13,6 +13,7 @@
         "php": ">=8.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "symfony/clock": "8.0.*",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
         "symfony/flex": "^2.10",
@@ -20,8 +21,6 @@
         "symfony/runtime": "8.0.*",
         "symfony/tui": ">=8.1",
         "symfony/yaml": "8.0.*"
-    },
-    "require-dev": {
     },
     "config": {
         "allow-plugins": {
@@ -76,5 +75,8 @@
             "allow-contrib": false,
             "require": "8.0.*"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11"
     }
 }

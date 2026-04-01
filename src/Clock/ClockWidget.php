@@ -4,6 +4,8 @@ namespace App\Clock;
 
 use Symfony\Component\Tui\Input\Key;
 use Symfony\Component\Tui\Style\Style;
+
+use function Symfony\Component\Clock\now;
 use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
@@ -21,7 +23,7 @@ use Symfony\Component\Tui\Widget\WidgetContext;
  * bar, and day/week progress indicators.  Keybindings: t=theme, s=seconds
  * toggle, h=12/24 h toggle, q/ctrl+c=quit.
  *
- * Bar colours are applied via StyleSheet element rules; call
+ * Bar colors are applied via StyleSheet element rules; call
  * {@see ClockCommand::configureStylesheet()} before running.
  */
 class ClockWidget extends ContainerWidget implements FocusableInterface
@@ -84,34 +86,49 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         $main->add($this->dateWidget);
 
         // Seconds bar: one block per second, 60 chars wide.
+        // Each bar has maxColumns so its rendered line is narrower than the parent
+        // container; each is then wrapped in a ContainerWidget with align-center
+        // so the Renderer can compute a per-bar centering offset independently.
         $this->secondsBar = new ProgressBarWidget(60, '%bar%');
         $this->secondsBar
              ->setBarWidth(60)
              ->setBarCharacter('█')
              ->setEmptyBarCharacter('░')
-             ->addStyleClass('text-center')
+             ->setStyle(new Style(maxColumns: 60))
              ->addStyleClass('clock-bar-cyan');
-        $main->add($this->secondsBar);
-
         // Day and week progress bars.
+        // maxColumns = label(6) + bar(30) + separators(2) + percent(5) = 43.
         $this->dayBar = new ProgressBarWidget(86400, 'Day   %bar%  %percent:4s%%');
         $this->dayBar
              ->setBarWidth(30)
              ->setBarCharacter('█')
              ->setEmptyBarCharacter('░')
+             ->setStyle(new Style(maxColumns: 43))
              ->addStyleClass('text-gray-600')
              ->addStyleClass('clock-bar-cyan');
-        $main->add($this->dayBar);
 
+        // maxColumns = 43 + '  (Wednesday)' (13) = 56.
         $this->weekBar = new ProgressBarWidget(7 * 86400, 'Week  %bar%  %percent:4s%%  (%day%)');
         $this->weekBar
              ->setBarWidth(30)
              ->setBarCharacter('█')
              ->setEmptyBarCharacter('░')
+             ->setStyle(new Style(maxColumns: 56))
              ->addStyleClass('text-gray-600')
              ->addStyleClass('clock-bar-cyan');
-        $this->weekBar->setPlaceholderFormatter('day', static fn () => date('l'));
-        $main->add($this->weekBar);
+        $this->weekBar->setPlaceholderFormatter('day', static fn () => now()->format('l'));
+
+        // Group all three bars with gap-1 between secondsBar and the day/week pair.
+        $barsGroup = new ContainerWidget();
+        $barsGroup->addStyleClass('gap-1');
+        $barsGroup->add($this->centeredBar($this->secondsBar));
+
+        $dayWeekGroup = new ContainerWidget();
+        $dayWeekGroup->add($this->centeredBar($this->dayBar));
+        $dayWeekGroup->add($this->centeredBar($this->weekBar));
+        $barsGroup->add($dayWeekGroup);
+
+        $main->add($barsGroup);
 
         $this->add($main);
 
@@ -201,7 +218,7 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         $this->setStyleClasses(['bg-gray-950', 'border', 'border-double', $theme['border']]);
         $this->timeWidget->setStyleClasses(['font-big', 'bold', 'text-center', $theme['time']]);
         $this->dateWidget->setStyleClasses(['text-center', $theme['date']]);
-        $this->secondsBar->setStyleClasses(['text-center', $theme['css']]);
+        $this->secondsBar->setStyleClasses([$theme['css']]);
         $this->dayBar->setStyleClasses(['text-gray-600', $theme['css']]);
         $this->weekBar->setStyleClasses(['text-gray-600', $theme['css']]);
 
@@ -212,10 +229,10 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
     private function timeString(): string
     {
         if ($this->show24h) {
-            return $this->showSeconds ? date('H:i:s') : date('H:i');
+            return $this->showSeconds ? now()->format('H:i:s') : now()->format('H:i');
         }
 
-        return $this->showSeconds ? date('g:i:s A') : date('g:i A');
+        return $this->showSeconds ? now()->format('g:i:s A') : now()->format('g:i A');
     }
 
     private function updateDisplay(): void
@@ -226,13 +243,14 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
         }
         $this->lastTime = $time;
 
-        $h   = (int) date('G');
-        $m   = (int) date('i');
-        $s   = (int) date('s');
-        $dow = (int) date('N'); // 1=Mon … 7=Sun
+        $dt  = now();
+        $h   = (int) $dt->format('G');
+        $m   = (int) $dt->format('i');
+        $s   = (int) $dt->format('s');
+        $dow = (int) $dt->format('N'); // 1=Mon … 7=Sun
 
         $this->timeWidget->setText($time);
-        $this->dateWidget->setText("\n".date('l, F j, Y')."\n");
+        $this->dateWidget->setText("\n".$dt->format('l, F j, Y')."\n");
 
         $this->secondsBar->setProgress($s);
         $this->dayBar->setProgress($h * 3600 + $m * 60 + $s);
@@ -255,5 +273,20 @@ class ClockWidget extends ContainerWidget implements FocusableInterface
             $key->apply('[h]').' '.$val->apply($this->show24h ? '24h' : '12h'),
             $key->apply('[q]').' '.$val->apply('quit'),
         ]);
+    }
+
+    /**
+     * Wrap a ProgressBarWidget in a ContainerWidget with align-center so the
+     * renderer computes a centering offset for the bar independently of its
+     * siblings (ProgressBarWidget pads to full width, so the parent's single
+     * align-center pass would always see zero available space without a wrapper).
+     */
+    private function centeredBar(ProgressBarWidget $bar): ContainerWidget
+    {
+        $wrapper = new ContainerWidget();
+        $wrapper->addStyleClass('align-center');
+        $wrapper->add($bar);
+
+        return $wrapper;
     }
 }
