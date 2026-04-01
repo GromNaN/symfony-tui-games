@@ -13,22 +13,22 @@ enum BuildMode
     public function tileType(): ?TileType
     {
         return match ($this) {
-            self::Path      => TileType::Path,
-            self::Coaster   => TileType::Coaster,
+            self::Path => TileType::Path,
+            self::Coaster => TileType::Coaster,
             self::FoodStall => TileType::FoodStall,
-            self::Toilet    => TileType::Toilet,
-            self::Demolish  => null,
+            self::Toilet => TileType::Toilet,
+            self::Demolish => null,
         };
     }
 
     public function label(): string
     {
         return match ($this) {
-            self::Path      => 'Path',
-            self::Coaster   => 'Coaster',
+            self::Path => 'Path',
+            self::Coaster => 'Coaster',
             self::FoodStall => 'Food Stall',
-            self::Toilet    => 'Toilets',
-            self::Demolish  => 'Demolish',
+            self::Toilet => 'Toilets',
+            self::Demolish => 'Demolish',
         };
     }
 
@@ -40,11 +40,11 @@ enum BuildMode
     public function shortKey(): string
     {
         return match ($this) {
-            self::Path      => '1',
-            self::Coaster   => '2',
+            self::Path => '1',
+            self::Coaster => '2',
             self::FoodStall => '3',
-            self::Toilet    => '4',
-            self::Demolish  => 'D',
+            self::Toilet => '4',
+            self::Demolish => 'D',
         };
     }
 }

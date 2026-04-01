@@ -138,26 +138,56 @@ class TetrisGame
     // Getters
     // -------------------------------------------------------------------------
 
-    public function getCols(): int { return self::COLS; }
+    public function getCols(): int
+    {
+        return self::COLS;
+    }
 
-    public function getRows(): int { return self::ROWS; }
+    public function getRows(): int
+    {
+        return self::ROWS;
+    }
 
-    public function getScore(): int { return $this->score; }
+    public function getScore(): int
+    {
+        return $this->score;
+    }
 
-    public function getLevel(): int { return $this->level; }
+    public function getLevel(): int
+    {
+        return $this->level;
+    }
 
-    public function getLinesCleared(): int { return $this->linesCleared; }
+    public function getLinesCleared(): int
+    {
+        return $this->linesCleared;
+    }
 
-    public function getState(): GameState { return $this->state; }
+    public function getState(): GameState
+    {
+        return $this->state;
+    }
 
     /** @return array<int, array<int, Tetromino|null>> */
-    public function getBoard(): array { return $this->board; }
+    public function getBoard(): array
+    {
+        return $this->board;
+    }
 
-    public function getCurrentPiece(): Tetromino { return $this->current; }
+    public function getCurrentPiece(): Tetromino
+    {
+        return $this->current;
+    }
 
-    public function getCurrentRotation(): int { return $this->currentRotation; }
+    public function getCurrentRotation(): int
+    {
+        return $this->currentRotation;
+    }
 
-    public function getNextPiece(): Tetromino { return $this->next; }
+    public function getNextPiece(): Tetromino
+    {
+        return $this->next;
+    }
 
     /** @return list<array{int, int}> Absolute board positions of the falling piece. */
     public function getCurrentCells(): array

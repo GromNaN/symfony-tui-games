@@ -113,17 +113,42 @@ class SnakeGame
         return max(80, 200 - $speedLevel * 15);
     }
 
-    public function getCols(): int { return $this->cols; }
-    public function getRows(): int { return $this->rows; }
-    public function getScore(): int { return $this->score; }
-    public function getState(): GameState { return $this->state; }
-    public function getLength(): int { return \count($this->snake); }
+    public function getCols(): int
+    {
+        return $this->cols;
+    }
+
+    public function getRows(): int
+    {
+        return $this->rows;
+    }
+
+    public function getScore(): int
+    {
+        return $this->score;
+    }
+
+    public function getState(): GameState
+    {
+        return $this->state;
+    }
+
+    public function getLength(): int
+    {
+        return \count($this->snake);
+    }
 
     /** @return list<array{int, int}> */
-    public function getSnake(): array { return $this->snake; }
+    public function getSnake(): array
+    {
+        return $this->snake;
+    }
 
     /** @return array{int, int} */
-    public function getFood(): array { return $this->food; }
+    public function getFood(): array
+    {
+        return $this->food;
+    }
 
     private function spawnFood(): void
     {
