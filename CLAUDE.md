@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Terminal games showcase for the experimental `symfony/tui` component (PHP 8.4+, Symfony 8.0). Each game exercises different TUI API features — styling, borders, compositing, keybindings, tick loops. The TUI component is **not on Packagist**; it's bundled locally in `vendor-src/` via a `path` repository.
+Terminal games showcase for the experimental `symfony/tui` component (PHP 8.4+). Each game exercises different TUI API features — styling, borders, compositing, keybindings, tick loops.
+
+Two components are **not on Packagist** and are bundled locally in `vendor-src/` via `path` repositories:
+- `symfony/tui` — in `vendor-src/symfony/tui/` (fabpot/symfony, branch `tui`)
+- `symfony/console` + `symfony/dependency-injection` with `ConsoleBundle` — in `vendor-src/symfony/nicolas-grekas/` (symfony/symfony PR #63715)
 
 ## Commands
 
@@ -39,6 +43,11 @@ Supporting enums/classes live alongside the game (e.g., `Direction`, `GameState`
 - **Overlays** use `Compositor::composite()` with transparent `Layer` objects.
 - **String widths:** Always use `AnsiUtils::visibleWidth()` instead of `mb_strlen()`/`strlen()` for terminal-destined strings.
 
-## TUI component dependency
+## Submodule dependencies
 
-The `symfony/tui` source lives in `vendor-src/symfony/` (cloned from `fabpot/symfony` branch `tui`). Do **not** run `composer update symfony/tui` without first updating `vendor-src/symfony`.
+- `vendor-src/symfony/tui/` — cloned from `fabpot/symfony` branch `tui`. Do **not** run `composer update symfony/tui` without first updating this submodule.
+- `vendor-src/symfony/nicolas-grekas/` — tracks the `console-kernel` branch from symfony/symfony PR #63715. Contains updated `Console` and `DependencyInjection` components including `ConsoleBundle`, `AbstractKernel`, and `KernelTrait`.
+
+## Kernel architecture
+
+`src/Kernel.php` extends `AbstractKernel` and uses `KernelTrait` (from `symfony/dependency-injection`) — a pure DI kernel with no HTTP stack. Bundle registration and service autowiring are inlined directly in `Kernel.php`; there is no `config/bundles.php` or `config/services.yaml`.
