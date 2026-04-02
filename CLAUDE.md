@@ -14,6 +14,7 @@ php bin/console app:snake           # Play Snake
 php bin/console app:tetris          # Play Tetris
 php bin/console app:space           # Play Space Invaders
 php bin/console app:park            # Play Theme Park
+php bin/console app:racer           # Play Racer (pseudo-3D racing)
 ```
 
 No test suite, linter, or static analysis is configured yet.
