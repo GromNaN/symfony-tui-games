@@ -103,16 +103,21 @@ $w = AnsiUtils::visibleWidth($style->apply($text));  // strips codes, counts col
 
 ---
 
-## TUI component dependency
+## Submodule dependencies
 
-The `symfony/tui` component lives under `vendor-src/symfony` as a Git submodule
-pointing to the `tui` branch of `fabpot/symfony`, locked to a specific commit
-(see [README.md](README.md)). It is **not** available on Packagist.
+This project vendors two experimental Symfony components via Git submodules:
 
-To update the submodule to the latest commit on the `tui` branch:
+| Submodule | Package(s) | Source |
+|-----------|-----------|--------|
+| `vendor-src/symfony/tui` | `symfony/tui` | `fabpot/symfony` branch `tui` |
+| `vendor-src/symfony/nicolas-grekas` | `symfony/console`, `symfony/dependency-injection` | [symfony/symfony#63715](https://github.com/symfony/symfony/pull/63715) |
+
+Neither is available on Packagist yet; both are loaded via `path` repositories in `composer.json`.
+
+To update TUI to the latest commit:
 
 ```bash
-git submodule update --remote vendor-src/symfony
-git add vendor-src/symfony
+git submodule update --remote vendor-src/symfony/tui
+git add vendor-src/symfony/tui
 git commit -m "Update symfony/tui submodule"
 ```

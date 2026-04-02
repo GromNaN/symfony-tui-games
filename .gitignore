@@ -1,23 +1,6 @@
-
-###> symfony/framework-bundle ###
-/.env.local
-/.env.local.php
-/.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
 /var/
 /vendor/
-###< symfony/framework-bundle ###
-
-###> phpunit/phpunit ###
 /phpunit.xml
 /.phpunit.cache/
-###< phpunit/phpunit ###
-
-.claude/settings.local.json
-/config/reference.php
-
-###> friendsofphp/php-cs-fixer ###
-/.php-cs-fixer.php
 /.php-cs-fixer.cache
-###< friendsofphp/php-cs-fixer ###
+.claude/settings.local.json

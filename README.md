@@ -7,12 +7,11 @@ borders, compositing, keybindings, tick loops — so the project doubles as a
 living, playable reference for the component.
 
 > [!WARNING]
-> **`symfony/tui` is experimental and its PR is pending review.**
-> It has not been merged into Symfony yet.
-> See: https://github.com/symfony/symfony-docs/pull/22201
+> This project depends on two experimental Symfony components that are not yet on Packagist:
 >
-> This project embeds the component via a Git submodule pointing to the
-> `tui` branch of `fabpot/symfony`, locked to a specific commit.
+> - **`symfony/tui`** — pending review, tracked via `vendor-src/symfony/tui` (submodule of `fabpot/symfony` branch `tui`)
+> - **`symfony/console` + `symfony/dependency-injection`** with `ConsoleBundle` and pure DI kernel — from [symfony/symfony#63715](https://github.com/symfony/symfony/pull/63715), tracked via `vendor-src/symfony/nicolas-grekas`
+>
 > Follow the setup instructions below to get started.
 
 ---
@@ -26,17 +25,17 @@ living, playable reference for the component.
 ## Installation
 
 ```bash
-# Clone this repository with its submodule
+# Clone this repository with its submodules
 git clone --recurse-submodules https://github.com/GromNaN/symfony-tui-games.git symfony-tui-games
 cd symfony-tui-games
 
-# Install dependencies (the TUI component is loaded from vendor-src/ via a path repository)
+# Install dependencies (TUI and ConsoleBundle are loaded from vendor-src/ via path repositories)
 composer install
 ```
 
 > If you cloned without `--recurse-submodules`, run
 > `git submodule update --init` before `composer install`.
-> The `composer install` / `composer update` scripts also run this automatically.
+> The `composer install` / `composer update` scripts run this automatically.
 
 ---
 
@@ -49,6 +48,7 @@ composer install
 | `php bin/console app:space` | **Space Invaders** — defend Earth against waves of emoji invaders. |
 | `php bin/console app:tetris` | **Tetris** — classic falling pieces with ghost preview, soft/hard drop, and increasing speed. |
 | `php bin/console app:pong` | **Pong** — two-player classic. Player 1 uses W/S, Player 2 uses arrow keys. First to 11 wins. |
+| `php bin/console app:racer` | **Racer** — pseudo-3D racing with curves, roadside trees and enemy cars. Rendered with Unicode sextant sub-pixels. |
 
 ### Common controls
 
