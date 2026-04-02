@@ -14,12 +14,15 @@ use Symfony\Component\Tui\Widget\QuitableTrait;
 /**
  * Racer TUI widget.
  *
- * Renders a full-screen pseudo-3D racing game: per-pixel RGB frame buffer,
- * perspective road with curves, tree sprites, enemy cars, and overlay text.
- * render() returns $rows-1 game lines + 1 help bar line.
+ * Renders a full-screen pseudo-3D racing game using Unicode sextant sub-pixel
+ * rendering. Each terminal cell is treated as a 2×3 grid of sub-pixels, yielding
+ * effectively double horizontal and triple vertical resolution for smooth curves,
+ * road edges, and mountain silhouettes.
  *
- * True-color ANSI codes are used for pixel rendering via Palette; all other
- * text styling uses Style::apply().
+ * render() returns ($rows-1) game lines + 1 help bar line.
+ *
+ * True-color ANSI codes are generated only through Palette; all other text
+ * styling uses Style::apply().
  */
 class RacerWidget extends AbstractWidget implements FocusableInterface
 {
@@ -31,7 +34,7 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
 
     /**
      * 5-row ASCII art glyphs for the countdown and crash overlays.
-     * Each '#' becomes a full-block character; spaces become background fill.
+     * '#' → full-block character; ' ' → background fill.
      */
     private const GLYPHS = [
         '3' => [' ##### ', '     # ', '  ###  ', '     # ', ' ##### '],
@@ -103,48 +106,57 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
     }
 
     /**
-     * Build the full game frame as an array of ANSI-colored strings.
+     * Build the full game frame using Unicode sextant sub-pixel rendering.
+     *
+     * Each terminal cell covers a 2×3 block of sub-pixels (cols×2, rows×3).
+     * All game geometry is computed in sub-pixel space, then each block is
+     * downsampled to a sextant character, yielding smooth road edges, mountain
+     * silhouettes, and tree contours.
      *
      * Pipeline:
-     *   1. Pre-compute road segment geometry (perspective projection)
-     *   2. Project tree and enemy world positions to screen coordinates
-     *   3. Build the overlay buffer (HUD, countdown, crash text)
-     *   4. Rasterise every cell: sky → road → trees → enemies → player → overlay
+     *   1. Road geometry in sub-pixel space (perspective projection)
+     *   2. Sprite projection (trees, enemies, player car)
+     *   3. Overlay buffer in terminal-cell space (HUD, countdown, crash)
+     *   4. Per terminal row: rasterise 3 sub-rows → compose sextant cells
      *
      * @return list<string>
      */
     private function renderFrame(int $cols, int $rows): array
     {
+        // Sub-pixel dimensions: 2× horizontal, 3× vertical.
+        $sc = $cols * 2;
+        $sr = $rows * 3;
+
         $reset = "\x1b[0m";
-        $horizonY = (int) ($rows * 0.22);
-        $roadRows = $rows - $horizonY;
-        $roadMaxHalfW = (int) ($cols * 0.38);
-        $roadMinHalfW = (int) ($cols * 0.06);
+        $horizonSY = (int) ($sr * 0.22);
+        $roadSubRows = $sr - $horizonSY;
+        $roadMaxHalfW = (int) ($sc * 0.38);
+        $roadMinHalfW = (int) ($sc * 0.06);
 
         $position = $this->game->getPosition();
         $parallaxX = $this->game->getParallaxX();
         $playerX = $this->game->getPlayerX();
 
         $camCurve = $this->track->curveAt((int) ($position / 3));
-        $pOff = (int) ($parallaxX * 4);
+        $pOff = (int) ($parallaxX * 8); // ×2 for doubled column count
 
-        // -- Road geometry -------------------------------------------------
+        // -- Road geometry in sub-pixel space --------------------------------
 
         $rd = [];
         $acc = 0.0;
-        for ($sr = 0; $sr < $roadRows; ++$sr) {
-            $t = $sr / max(1, $roadRows - 1);
+        for ($r = 0; $r < $roadSubRows; ++$r) {
+            $t = $r / max(1, $roadSubRows - 1);
             $t2 = $t * $t;
             $z = 1.0 / max(0.01, $t);
             $hw = (int) ($roadMinHalfW + ($roadMaxHalfW - $roadMinHalfW) * $t2);
             $acc += $this->track->curveAt((int) (($position + $z * 6.0) / 3)) * $t * 1.4;
-            $c = (int) ($cols / 2 + $acc - $camCurve * $t * 30);
+            $c = (int) ($sc / 2 + $acc - $camCurve * $t * 60); // ×2 for sub-pixel cols
             $s = ((int) ($position * 0.1 + $z * 0.35)) % 2;
-            $rd[$sr] = ['t' => $t, 'z' => $z, 'hw' => $hw, 'c' => $c, 's' => $s];
+            $rd[$r] = ['t' => $t, 'z' => $z, 'hw' => $hw, 'c' => $c, 's' => $s];
         }
 
-        // Convert a relative world Z-depth to a screen row (null = not visible).
-        $zToRow = static function (float $relZ) use ($roadRows, $horizonY): ?int {
+        // Convert relative world Z to a sub-pixel row (null = not visible).
+        $zToSubRow = static function (float $relZ) use ($roadSubRows, $horizonSY): ?int {
             if ($relZ <= 0) {
                 return null;
             }
@@ -153,10 +165,10 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
                 return null;
             }
 
-            return $horizonY + (int) ($t * $roadRows);
+            return $horizonSY + (int) ($t * $roadSubRows);
         };
 
-        // -- Tree sprites --------------------------------------------------
+        // -- Tree sprites in sub-pixel space ---------------------------------
 
         $treeSprites = [];
         foreach ($this->game->getTrees() as $tr) {
@@ -164,23 +176,23 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
             if ($rz < 3 || $rz > 500) {
                 continue;
             }
-            $row = $zToRow($rz);
-            if (null === $row || $row <= $horizonY || $row >= $horizonY + $roadRows) {
+            $row = $zToSubRow($rz);
+            if (null === $row || $row <= $horizonSY || $row >= $horizonSY + $roadSubRows) {
                 continue;
             }
-            $sr = $row - $horizonY;
-            if (!isset($rd[$sr])) {
+            $srow = $row - $horizonSY;
+            if (!isset($rd[$srow])) {
                 continue;
             }
-            $r = $rd[$sr];
+            $r = $rd[$srow];
             $edgeX = $r['c'] + $tr['side'] * ($r['hw'] + (int) ($tr['offset'] * $r['hw'] * 0.4));
-            $scale = max(1, (int) ($tr['size'] * $r['t'] * 4));
-            if ($edgeX >= 2 && $edgeX < $cols - 2) {
+            $scale = max(3, (int) ($tr['size'] * $r['t'] * 12)); // ×3 for sub-pixel height
+            if ($edgeX >= 4 && $edgeX < $sc - 4) {
                 $treeSprites[] = ['x' => $edgeX, 'y' => $row, 's' => $scale];
             }
         }
 
-        // -- Enemy sprites -------------------------------------------------
+        // -- Enemy sprites in sub-pixel space --------------------------------
 
         $enemySprites = [];
         foreach ($this->game->getEnemies() as $en) {
@@ -188,17 +200,17 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
             if ($rz < 3 || $rz > 500) {
                 continue;
             }
-            $row = $zToRow($rz);
-            if (null === $row || $row <= $horizonY || $row >= $horizonY + $roadRows - 2) {
+            $row = $zToSubRow($rz);
+            if (null === $row || $row <= $horizonSY || $row >= $horizonSY + $roadSubRows - 6) {
                 continue;
             }
-            $sr = $row - $horizonY;
-            if (!isset($rd[$sr])) {
+            $srow = $row - $horizonSY;
+            if (!isset($rd[$srow])) {
                 continue;
             }
-            $r = $rd[$sr];
+            $r = $rd[$srow];
             $ex = (int) ($r['c'] + $en['x'] * $r['hw'] * 0.8);
-            $hc = max(1, (int) ($r['t'] * 5));
+            $hc = max(2, (int) ($r['t'] * 10));
             $enemySprites[] = [
                 'x' => $ex,
                 'y' => $row,
@@ -207,10 +219,19 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
             ];
         }
 
-        // Player car centre-X on screen.
-        $psx = (int) ($cols / 2 + $playerX * $roadMaxHalfW * 0.8);
+        // Player car in sub-pixel space: ±6 sub-cols wide, 9 sub-rows tall.
+        $psx = (int) ($sc / 2 + $playerX * $roadMaxHalfW * 0.8);
+        $carY = ($rows - 4) * 3;
 
-        // -- Overlay buffer [$bg, $fg|null, $char] -------------------------
+        // Sun position (precomputed, used in the inner loop).
+        $sunX = (int) ($sc * 0.75 + $pOff * 0.5);
+        $sunY = (int) ($horizonSY * 0.3);
+
+        // Terminal-row horizon (for sky gradient quantisation).
+        $termHorizonY = (int) ($horizonSY / 3);
+
+        // -- Overlay buffer in terminal-cell space ---------------------------
+        // Overlays (HUD, crash, countdown) bypass the sextant compositing.
 
         $ov = [];
         $stamp = static function (int $y, int $x, string $text, array $fg, array $bg) use (&$ov, $cols): void {
@@ -222,13 +243,11 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
             }
         };
 
-        // Score / time HUD (top-left and top-right).
         $hb = [15, 15, 25];
         $stamp(0, 1, \sprintf(' %05d ', $this->game->getScore()), [255, 220, 50], $hb);
         $tt = \sprintf(' %s ', $this->game->formatTime());
         $stamp(0, $cols - \strlen($tt) - 1, $tt, [255, 220, 50], $hb);
 
-        // Countdown big text.
         if ($this->game->isCounting() && !$this->game->isStarted()) {
             $midY = intdiv($rows, 2) - 3;
             $cv = $this->game->getCountdownValue();
@@ -239,12 +258,10 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
             }
         }
 
-        // Crash big text + score box.
         if (!$this->game->isAlive() && $this->game->getDeathTimer() > 0.4) {
             $midY = intdiv($rows, 2) - 5;
             $crashBg = [40, 10, 10];
             $this->stampBigText('CRASH', $midY, [255, 50, 50], $crashBg, $ov, $cols);
-
             $infoY = $midY + 7;
             $infoBg = [30, 8, 8];
             $s1 = \sprintf(
@@ -254,135 +271,155 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
                 $this->game->formatTime(),
             );
             $stamp($infoY, intdiv($cols - \strlen($s1), 2), $s1, [200, 200, 210], $infoBg);
-
             if ($this->game->isBlinkOn()) {
                 $coin = '  >>> INSERT COIN <<<  ';
                 $stamp($infoY + 2, intdiv($cols - \strlen($coin), 2), $coin, [255, 220, 50], $infoBg);
             }
         }
 
-        // -- Rasterise -----------------------------------------------------
+        // -- Rasterise: 3 sub-rows per terminal row, compose sextant cells --
 
         $lines = [];
         for ($y = 0; $y < $rows; ++$y) {
+            // Fill three sub-rows for this terminal row.
+            $subRows3 = [[], [], []];
+
+            for ($dr = 0; $dr < 3; ++$dr) {
+                $sy = $y * 3 + $dr;
+
+                for ($sx = 0; $sx < $sc; ++$sx) {
+                    $bg = null;
+
+                    // Sky and mountains (above horizon).
+                    if ($sy < $horizonSY) {
+                        // Gradient quantised to terminal-row resolution → uniform sky cells.
+                        $bg = Palette::lerp(Palette::SKY_TOP, Palette::SKY_BOT, $y / max(1, $termHorizonY - 1));
+                        $my = $horizonSY - 1;
+                        $px = $sx + $pOff;
+                        $px2 = $sx + (int) ($pOff * 1.6);
+                        // Halve sin frequencies (cols doubled) and triple heights.
+                        $h1 = (int) ((5 + 4 * sin($px * 0.0175 + 1.5) + 2 * sin($px * 0.04 + 0.5)) * 3);
+                        $h2 = (int) ((4 + 3 * sin($px2 * 0.025 + 3) + 2 * sin($px2 * 0.055)) * 3);
+                        if ($sy >= $my - $h1) {
+                            $bg = Palette::MTN_FAR;
+                            if ($sy < $my - $h1 + 6) { // snow: 2 terminal rows → 6 sub-rows
+                                $bg = Palette::MTN_SNOW;
+                            }
+                        }
+                        if ($sy >= $my - $h2 + 9) { // +3 terminal rows → +9 sub-rows
+                            $bg = Palette::MTN_NEAR;
+                        }
+                        // Sun disc: radius ×3 for sub-pixel space.
+                        if (\sqrt(($sx - $sunX) ** 2 * 0.5 + ($sy - $sunY) ** 2) < 9) {
+                            $bg = [255, 240, 180];
+                        }
+                    }
+
+                    // Road and grass (at or below horizon).
+                    if ($sy >= $horizonSY) {
+                        $srow = $sy - $horizonSY;
+                        if ($srow < $roadSubRows && isset($rd[$srow])) {
+                            $seg = $rd[$srow];
+                            $ad = abs($sx - $seg['c']);
+                            $sw = max(1, (int) ($seg['hw'] * 0.1));
+                            $lw = max(0, (int) ($seg['t'] * 4)); // ×2 for sub-pixel cols
+                            $bg = match (true) {
+                                $ad <= $lw && $lw > 0 => $seg['s'] ? Palette::LINE_WHITE : Palette::ROAD_2,
+                                $ad < $seg['hw'] - $sw => $seg['s'] ? Palette::ROAD_1 : Palette::ROAD_2,
+                                $ad < $seg['hw'] => $seg['s'] ? Palette::RUMBLE_1 : Palette::RUMBLE_2,
+                                default => $seg['s'] ? Palette::GRASS_1 : Palette::GRASS_2,
+                            };
+                        } else {
+                            $bg = Palette::GRASS_1;
+                        }
+                    }
+
+                    $bg ??= Palette::SKY_TOP;
+
+                    // Trees (triangular foliage, trunk at base).
+                    foreach ($treeSprites as $ts) {
+                        $tty = $ts['y'] - $ts['s'] * 2;
+                        $tky = $ts['y'] - 3; // 1 terminal row trunk → 3 sub-rows
+                        if ($sy < $tty || $sy > $ts['y'] + 2) {
+                            continue;
+                        }
+                        if ($sy >= $tky && $sy <= $ts['y'] + 2 && $sx === $ts['x']) {
+                            $bg = Palette::TREE_TRUNK;
+                        } elseif ($sy >= $tty && $sy < $tky) {
+                            $cr = max(1, $tky - $tty);
+                            $hw = max(0, (int) ($ts['s'] * ($sy - $tty + 1) / $cr));
+                            if (abs($sx - $ts['x']) <= $hw) {
+                                $bg = (($sy - $tty) % 2 === 0) ? Palette::TREE_LEAF_1 : Palette::TREE_LEAF_2;
+                            }
+                        }
+                    }
+
+                    // Enemy cars: 2 terminal rows = 6 sub-rows (top 3 = window, bottom 3 = body).
+                    foreach ($enemySprites as $es) {
+                        $rx = $sx - $es['x'];
+                        $ry = $sy - $es['y'];
+                        if ($ry >= -3 && $ry <= 2 && abs($rx) <= $es['hw']) {
+                            $bg = ($ry < 0 && abs($rx) < $es['hw'])
+                                ? Palette::CAR_WINDOW
+                                : $es['col'];
+                            if (abs($rx) === $es['hw']) {
+                                $bg = Palette::CAR_WHEEL;
+                            }
+                        }
+                    }
+
+                    // Player car: 9 sub-rows tall, ±6 sub-cols wide; blinks after crash.
+                    $rsx = $sx - $psx;
+                    $rsy = $sy - $carY;
+                    if ($this->game->isAlive() || $this->game->isBlinkOn()) {
+                        if ($rsy >= 0 && $rsy <= 2 && abs($rsx) <= 6) {
+                            $bg = match (true) {
+                                abs($rsx) <= 2 => Palette::CAR_WINDOW,
+                                abs($rsx) <= 4 => Palette::CAR_TOP,
+                                default => Palette::CAR_BODY,
+                            };
+                        } elseif ($rsy >= 3 && $rsy <= 5 && abs($rsx) <= 6) {
+                            $bg = 6 === abs($rsx) ? Palette::CAR_WHEEL : Palette::CAR_BODY;
+                            if (abs($rsx) <= 1) {
+                                $bg = Palette::CAR_HIGH; // centre racing stripe
+                            }
+                        } elseif ($rsy >= 6 && $rsy <= 8 && abs($rsx) <= 6) {
+                            $bg = match (true) {
+                                6 === abs($rsx) => Palette::CAR_WHEEL,
+                                abs($rsx) >= 4 => Palette::CAR_TAIL,
+                                default => Palette::CAR_BODY,
+                            };
+                        }
+                    }
+
+                    $subRows3[$dr][$sx] = $bg;
+                }
+            }
+
+            // Compose terminal cells from 6-sub-pixel groups.
             $line = '';
             for ($x = 0; $x < $cols; ++$x) {
-                $bg = null;
-                $fg = null;
-                $ch = ' ';
-
-                // Sky and mountains (above horizon).
-                if ($y < $horizonY) {
-                    $bg = Palette::lerp(Palette::SKY_TOP, Palette::SKY_BOT, $y / max(1, $horizonY - 1));
-                    $my = $horizonY - 1;
-                    $px = $x + $pOff;
-                    $px2 = $x + (int) ($pOff * 1.6);
-                    $h1 = (int) (5 + 4 * sin($px * 0.035 + 1.5) + 2 * sin($px * 0.08 + 0.5));
-                    $h2 = (int) (4 + 3 * sin($px2 * 0.05 + 3) + 2 * sin($px2 * 0.11));
-                    if ($y >= $my - $h1) {
-                        $bg = Palette::MTN_FAR;
-                        if ($y < $my - $h1 + 2) {
-                            $bg = Palette::MTN_SNOW;
-                        }
-                    }
-                    if ($y >= $my - $h2 + 3) {
-                        $bg = Palette::MTN_NEAR;
-                    }
-                    // Sun disc.
-                    $sx = (int) ($cols * 0.75 + $pOff * 0.5);
-                    if (sqrt(($x - $sx) ** 2 * 0.5 + ($y - (int) ($horizonY * 0.3)) ** 2) < 3) {
-                        $bg = [255, 240, 180];
-                    }
-                }
-
-                // Road and grass (at and below horizon).
-                if ($y >= $horizonY) {
-                    $sr = $y - $horizonY;
-                    if ($sr < $roadRows && isset($rd[$sr])) {
-                        $r = $rd[$sr];
-                        $ad = abs($x - $r['c']);
-                        $sw = max(1, (int) ($r['hw'] * 0.1));
-                        $lw = max(0, (int) ($r['t'] * 2));
-                        $bg = match (true) {
-                            $ad <= $lw && $lw > 0 => $r['s'] ? Palette::LINE_WHITE : Palette::ROAD_2,
-                            $ad < $r['hw'] - $sw => $r['s'] ? Palette::ROAD_1 : Palette::ROAD_2,
-                            $ad < $r['hw'] => $r['s'] ? Palette::RUMBLE_1 : Palette::RUMBLE_2,
-                            default => $r['s'] ? Palette::GRASS_1 : Palette::GRASS_2,
-                        };
-                    } else {
-                        $bg = Palette::GRASS_1;
-                    }
-                }
-
-                $bg ??= Palette::SKY_TOP;
-
-                // Trees (foliage tapers toward top, trunk at base).
-                foreach ($treeSprites as $ts) {
-                    $tty = $ts['y'] - $ts['s'] * 2;
-                    $tky = $ts['y'] - 1;
-                    if ($y >= $tky && $y <= $ts['y'] && $x === $ts['x']) {
-                        $bg = Palette::TREE_TRUNK;
-                    }
-                    if ($y >= $tty && $y < $tky) {
-                        $cr = max(1, $tky - $tty);
-                        $hw = max(0, (int) ($ts['s'] * ($y - $tty + 1) / $cr));
-                        if (abs($x - $ts['x']) <= $hw) {
-                            $bg = (($y - $tty) % 2 === 0) ? Palette::TREE_LEAF_1 : Palette::TREE_LEAF_2;
-                        }
-                    }
-                }
-
-                // Enemy cars (2-row sprite: window row + body row).
-                foreach ($enemySprites as $es) {
-                    $rx = $x - $es['x'];
-                    $ry = $y - $es['y'];
-                    if ($ry >= -1 && $ry <= 0 && abs($rx) <= $es['hw']) {
-                        $bg = (-1 === $ry && abs($rx) < $es['hw'])
-                            ? Palette::CAR_WINDOW
-                            : $es['col'];
-                        if (abs($rx) === $es['hw']) {
-                            $bg = Palette::CAR_WHEEL;
-                        }
-                    }
-                }
-
-                // Player car (3-row sprite; blinks after crash).
-                $cy = $rows - 4;
-                $rx = $x - $psx;
-                $ry = $y - $cy;
-                if ($this->game->isAlive() || $this->game->isBlinkOn()) {
-                    if (0 === $ry && abs($rx) <= 3) {
-                        $bg = match (true) {
-                            abs($rx) <= 1 => Palette::CAR_WINDOW,
-                            2 === abs($rx) => Palette::CAR_TOP,
-                            default => Palette::CAR_BODY,
-                        };
-                    } elseif (1 === $ry && abs($rx) <= 3) {
-                        $bg = 3 === abs($rx) ? Palette::CAR_WHEEL : Palette::CAR_BODY;
-                        if (0 === $rx) {
-                            $bg = Palette::CAR_HIGH;
-                            $fg = [255, 255, 255];
-                            $ch = '|';
-                        }
-                    } elseif (2 === $ry && abs($rx) <= 3) {
-                        $bg = match (true) {
-                            3 === abs($rx) => Palette::CAR_WHEEL,
-                            2 === abs($rx) => Palette::CAR_TAIL,
-                            default => Palette::CAR_BODY,
-                        };
-                    }
-                }
-
-                // Overlay (HUD, countdown, crash) always wins.
                 if (isset($ov[$y][$x])) {
-                    [$bg, $fg, $ch] = $ov[$y][$x];
+                    // Overlay cells bypass sextant compositing entirely.
+                    [$obg, $ofg, $och] = $ov[$y][$x];
+                    $line .= Palette::bg($obg);
+                    if (null !== $ofg) {
+                        $line .= Palette::fg($ofg);
+                    }
+                    $line .= $och;
+                } else {
+                    $pixels = [
+                        $subRows3[0][$x * 2],     $subRows3[0][$x * 2 + 1],
+                        $subRows3[1][$x * 2],     $subRows3[1][$x * 2 + 1],
+                        $subRows3[2][$x * 2],     $subRows3[2][$x * 2 + 1],
+                    ];
+                    [$char, $fg, $bg] = $this->composeSextantCell($pixels);
+                    $line .= Palette::bg($bg);
+                    if (null !== $fg) {
+                        $line .= Palette::fg($fg);
+                    }
+                    $line .= $char;
                 }
-
-                $line .= Palette::bg($bg);
-                if (null !== $fg) {
-                    $line .= Palette::fg($fg);
-                }
-                $line .= $ch;
             }
             $line .= $reset;
             $lines[] = $line;
@@ -403,11 +440,96 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
         return $this->styleHelp->apply(\str_pad($hint, $cols));
     }
 
+    // -------------------------------------------------------------------------
+    // Sextant helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Compose a terminal cell from 6 sub-pixels ordered [top-left … bot-right].
+     *
+     * Finds the two most frequent colors: most common = background (fill),
+     * second = foreground (active sextant bits).
+     * Returns [char, fg_color|null, bg_color].
+     *
+     * @param list<array{int,int,int}> $pixels
+     *
+     * @return array{string, array{int,int,int}|null, array{int,int,int}}
+     */
+    private function composeSextantCell(array $pixels): array
+    {
+        $counts = [];
+        $colors = [];
+        foreach ($pixels as $px) {
+            $k = ($px[0] << 16) | ($px[1] << 8) | $px[2];
+            $counts[$k] = ($counts[$k] ?? 0) + 1;
+            $colors[$k] ??= $px;
+        }
+
+        if (1 === \count($counts)) {
+            return [' ', null, $pixels[0]];
+        }
+
+        \arsort($counts);
+        $keys = \array_keys($counts);
+        $bgKey = $keys[0];
+        $fgKey = $keys[1];
+
+        // Sextant mask: bit i set when sub-pixel i differs from the background.
+        $mask = 0;
+        foreach ($pixels as $i => $px) {
+            $k = ($px[0] << 16) | ($px[1] << 8) | $px[2];
+            if ($k !== $bgKey) {
+                $mask |= (1 << $i);
+            }
+        }
+
+        return [self::sextantChar($mask), $colors[$fgKey], $colors[$bgKey]];
+    }
+
+    /**
+     * Return the UTF-8 character for a 6-bit sextant mask.
+     *
+     * Bit layout (positions 1–6 in Unicode naming):
+     *   bit 0 (1)  = top-left     bit 1 (2)  = top-right
+     *   bit 2 (4)  = mid-left     bit 3 (8)  = mid-right
+     *   bit 4 (16) = bot-left     bit 5 (32) = bot-right
+     *
+     * Special cases reuse existing block elements:
+     *   mask  0 → ' '   (empty)
+     *   mask 21 → ▌ U+258C  (left column: bits 0,2,4)
+     *   mask 42 → ▐ U+2590  (right column: bits 1,3,5)
+     *   mask 63 → █ U+2588  (full block)
+     *
+     * The remaining 60 masks map to U+1FB00–U+1FB3B (all share UTF-8 prefix
+     * F0 9F AC; 4th byte = 0x80 + index, skipping over masks 21 and 42):
+     *   masks  1–20 → index = mask − 1    (U+1FB00–U+1FB13)
+     *   masks 22–41 → index = mask − 2    (U+1FB14–U+1FB27)
+     *   masks 43–62 → index = mask − 3    (U+1FB28–U+1FB3B)
+     */
+    private static function sextantChar(int $mask): string
+    {
+        return match ($mask) {
+            0 => ' ',
+            21 => "\xe2\x96\x8c",  // ▌ U+258C LEFT HALF BLOCK
+            42 => "\xe2\x96\x90",  // ▐ U+2590 RIGHT HALF BLOCK
+            63 => "\xe2\x96\x88",  // █ U+2588 FULL BLOCK
+            default => "\xF0\x9F\xAC".\chr(0x80 + match (true) {
+                $mask < 21 => $mask - 1,
+                $mask < 42 => $mask - 2,
+                default => $mask - 3,
+            }),
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // Big-text overlay
+    // -------------------------------------------------------------------------
+
     /**
      * Stamp 5-row big-pixel text into the overlay buffer (centred horizontally).
      *
-     * '#' pixels become full-block characters (█) in $fg on $bg.
-     * Space pixels become $bg-on-$bg to create a solid background box.
+     * '#' pixels → full-block █ in $fg on $bg.
+     * Space pixels → $bg-on-$bg for a solid background box.
      *
      * @param array<int, array<int, array{0: array, 1: array|null, 2: string}>> $ov
      */
@@ -423,7 +545,7 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
         $totalW = 0;
         for ($i = 0; $i < \strlen($text); ++$i) {
             $glyph = self::GLYPHS[$text[$i]] ?? self::GLYPHS[' '];
-            $totalW += \strlen($glyph[0]) + 1; // +1 gap between characters
+            $totalW += \strlen($glyph[0]) + 1;
         }
         $totalW = max(0, $totalW - 1);
         $cx = intdiv($cols - $totalW, 2);
@@ -436,7 +558,7 @@ class RacerWidget extends AbstractWidget implements FocusableInterface
                     $py = $centerY + $row;
                     if ($px >= 0 && $px < $cols) {
                         $ov[$py][$px] = '#' === $rowStr[$gi]
-                            ? [$bg, $fg, "\xe2\x96\x88"]  // filled pixel: █
+                            ? [$bg, $fg, "\xe2\x96\x88"]  // █ filled pixel
                             : [$bg, $bg, ' '];              // background fill
                     }
                 }
