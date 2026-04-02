@@ -150,7 +150,7 @@ final class RacerGame
         if ($this->enemyTimer >= $interval) {
             $this->enemyTimer = 0.0;
             $this->enemies[] = [
-                'z' => $this->position + 500,
+                'z' => $this->position + 80,
                 'x' => (mt_rand(0, 100) - 50) / 80.0,
                 'color' => mt_rand(0, 4),
                 'speed' => $this->speed * 0.65 + mt_rand(0, 5),
