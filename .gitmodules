@@ -1,5 +1,7 @@
-[submodule "vendor-src/symfony"]
-	path = vendor-src/symfony
+[submodule "vendor-src/symfony/tui"]
+	path = vendor-src/symfony/tui
 	url = https://github.com/fabpot/symfony.git
-	branch = tui
-	shallow = true
+[submodule "vendor-src/symfony/nicolas-grekas"]
+	path = vendor-src/symfony/nicolas-grekas
+	url = https://github.com/nicolas-grekas/symfony.git
+		
