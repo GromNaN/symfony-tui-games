@@ -18,5 +18,8 @@ return function (array $context) {
     $kernel = new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
     $kernel->boot();
 
-    return new Application('Symfony TUI Games', '1337', $kernel->getContainer());
+    $app = new Application('Symfony TUI Games', '1337', $kernel->getContainer());
+    $app->setDefaultCommand('app:menu');
+
+    return $app;
 };

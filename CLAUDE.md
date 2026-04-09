@@ -20,6 +20,8 @@ Three layers per game:
 2. `src/Command/MyGameCommand.php` — invokable, `#[AsCommand(name: 'app:my-game')]`.
 3. Widget: `render()` lines must have visible width <= `$context->getColumns()`, no trailing `\n`.
 4. Command: call `$event->setBusy()` in the tick callback.
+5. The game appears automatically in the menu (auto-discovered via the `console.command` tag).
+6. Add a snapshot test in `tests/MyGame/MyGameWidgetTest.php` (see existing tests for the pattern).
 
 ## TUI conventions
 
@@ -27,3 +29,12 @@ Three layers per game:
 - Borders/sizing in `StyleSheet`, not in `render()`.
 - Overlays: `Compositor::composite()` with transparent `Layer` objects.
 - String widths: always `AnsiUtils::visibleWidth()`, never `mb_strlen()`/`strlen()`.
+
+## Tests
+
+Snapshot tests use `VirtualTerminal` + `AnsiUtils::stripAnsiCodes()` and store plain-text renders in `tests/<Game>/snapshots/`.
+
+```bash
+php vendor/bin/phpunit          # run all tests
+UPDATE_SNAPSHOTS=1 php vendor/bin/phpunit tests/Menu/  # regenerate snapshots
+```

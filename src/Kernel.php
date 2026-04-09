@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Command\MenuCommand;
 use Symfony\Component\Console\ConsoleBundle;
 use Symfony\Component\DependencyInjection\Kernel\AbstractKernel;
 use Symfony\Component\DependencyInjection\Kernel\KernelTrait;
@@ -24,5 +25,12 @@ class Kernel extends AbstractKernel
             ->load('App\\', __DIR__.'/')
             ->autoconfigure()
             ->autowire();
+
+        if ('test' === $this->getEnvironment()) {
+            $container->services()
+                ->set(MenuCommand::class)
+                ->autowire()
+                ->public();
+        }
     }
 }

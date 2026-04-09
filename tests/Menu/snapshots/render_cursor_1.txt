@@ -1,0 +1,20 @@
+              
+              
+              
+              ╭──────────────────────────────────────────────────╮
+              │                Symfony TUI Games                 │
+              │──────────────────────────────────────────────────│
+              │  Clock             Retro digital clock           │
+              │▶ Park            Theme park management game      │
+              │  Pong              Two-player Pong game in the t…│
+              │  Racer             Retro pseudo-3D racing game   │
+              │  Snake             Snake game in the terminal    │
+              │  Space             Space Invaders                │
+              │  Tetris            Tetris game in the terminal   │
+              │──────────────────────────────────────────────────│
+              │  ↑↓ navigate   enter launch   q quit             │
+              ╰──────────────────────────────────────────────────╯
+              
+              
+              
+              

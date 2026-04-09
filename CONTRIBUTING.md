@@ -103,6 +103,20 @@ $w = AnsiUtils::visibleWidth($style->apply($text));  // strips codes, counts col
 
 ---
 
+## Tests
+
+Widget rendering is covered by snapshot tests. Each test renders the widget into a `VirtualTerminal`, strips ANSI codes, and compares the plain-text output to a file in `tests/<Game>/snapshots/`.
+
+```bash
+php vendor/bin/phpunit                          # run all tests
+UPDATE_SNAPSHOTS=1 php vendor/bin/phpunit       # regenerate all snapshots
+UPDATE_SNAPSHOTS=1 php vendor/bin/phpunit tests/Menu/  # regenerate one suite
+```
+
+When adding a new game, add a test in `tests/MyGame/MyGameWidgetTest.php` that covers at least the initial render. Use a fixed game state (via reflection if needed) for a deterministic snapshot.
+
+---
+
 ## Submodule dependencies
 
 `symfony/tui` is not on Packagist and is vendored via a Git submodule (`vendor-src/symfony/tui`, from `fabpot/symfony` branch `tui`), loaded via a `path` repository in `composer.json`.
