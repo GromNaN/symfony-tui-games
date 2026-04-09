@@ -24,6 +24,8 @@ class GameRegistry
     {
         $games = [];
         foreach ($this->commands->getProvidedServices() as $commandName => $serviceType) {
+            // excludeSelf: true on the AutowireLocator in MenuCommand should handle this, but doesn't work
+            // for invokable commands due to a Symfony bug (lazy wrapper gets a different service ID).
             if (!str_starts_with($commandName, 'app:') || !class_exists($serviceType) || 'app:menu' === $commandName) {
                 continue;
             }

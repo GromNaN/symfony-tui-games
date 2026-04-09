@@ -26,14 +26,14 @@ class MenuWidgetTest extends TestCase
         ['name' => 'Tetris', 'command' => 'app:tetris', 'description' => 'Tetris game in the terminal'],
     ];
 
-    public function testMenuDoesNotContainItself(): void
+    public function testMenuDoesNotContainItself()
     {
         foreach (self::GAMES as $game) {
             $this->assertNotSame('app:menu', $game['command'], 'app:menu must not appear in the game list');
         }
     }
 
-    public function testRenderMatchesSnapshot(): void
+    public function testRenderMatchesSnapshot()
     {
         $terminal = new VirtualTerminal(80, 20);
         $tui = new Tui($this->buildStylesheet(), terminal: $terminal);
@@ -55,7 +55,7 @@ class MenuWidgetTest extends TestCase
         $this->assertStringEqualsFile($snapshotFile, $plain);
     }
 
-    public function testRenderAfterNavigationMatchesSnapshot(): void
+    public function testRenderAfterNavigationMatchesSnapshot()
     {
         $terminal = new VirtualTerminal(80, 20);
         $tui = new Tui($this->buildStylesheet(), terminal: $terminal);

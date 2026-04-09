@@ -20,14 +20,14 @@ class MenuCommandTest extends TestCase
         self::$games = $command->getGames();
     }
 
-    public function testMenuCommandIsNotInGameList(): void
+    public function testMenuCommandIsNotInGameList()
     {
         $commands = array_column(self::$games, 'command');
 
         $this->assertNotContains('app:menu', $commands);
     }
 
-    public function testAllGameCommandsArePresent(): void
+    public function testAllGameCommandsArePresent()
     {
         $commands = array_column(self::$games, 'command');
 
@@ -36,7 +36,7 @@ class MenuCommandTest extends TestCase
         }
     }
 
-    public function testGamesAreSortedByCommand(): void
+    public function testGamesAreSortedByCommand()
     {
         $commands = array_column(self::$games, 'command');
         $sorted = $commands;
@@ -45,7 +45,7 @@ class MenuCommandTest extends TestCase
         $this->assertSame($sorted, $commands);
     }
 
-    public function testEachGameHasNameDescriptionAndCommand(): void
+    public function testEachGameHasNameDescriptionAndCommand()
     {
         foreach (self::$games as $game) {
             $this->assertArrayHasKey('name', $game);

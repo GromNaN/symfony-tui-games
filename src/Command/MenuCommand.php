@@ -24,6 +24,10 @@ final class MenuCommand
     private readonly GameRegistry $registry;
 
     public function __construct(
+        // excludeSelf: true is intended to exclude app:menu from the locator, but it is a no-op
+        // for invokable commands: the console bundle wraps them in a LazyCommand under the service ID
+        // "App\Command\MenuCommand.command", while excludeSelf excludes "App\Command\MenuCommand".
+        // The IDs don't match, so the exclusion silently fails. See GameRegistry::getGames() for the workaround.
         #[AutowireLocator('console.command', indexAttribute: 'command', excludeSelf: true)]
         ServiceProviderInterface $commands,
     ) {

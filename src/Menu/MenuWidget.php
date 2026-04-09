@@ -2,6 +2,7 @@
 
 namespace App\Menu;
 
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Input\Key;
 use Symfony\Component\Tui\Render\RenderContext;
@@ -10,11 +11,9 @@ use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\FocusableInterface;
 use Symfony\Component\Tui\Widget\FocusableTrait;
 use Symfony\Component\Tui\Widget\KeybindingsTrait;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\Tui\Widget\QuitableTrait;
 
 #[Exclude]
-
 class MenuWidget extends AbstractWidget implements FocusableInterface
 {
     use FocusableTrait;
