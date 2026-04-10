@@ -58,7 +58,7 @@ final class CipherCommand
         InputInterface $input,
         OutputInterface $output,
         #[Option(description: 'Pre-select a cipher', suggestedValues: [self::class, 'getCipherIds'])]
-        ?string $cipher = null,
+        ?string $algo = null,
         #[Option(description: 'Default text to encode')]
         ?string $text = null,
     ): int {
@@ -71,8 +71,8 @@ final class CipherCommand
             $cipherMap[$c->getId()] = $c;
         }
 
-        $activeCipher = isset($cipher, $cipherMap[$cipher])
-            ? $cipherMap[$cipher]
+        $activeCipher = isset($algo, $cipherMap[$algo])
+            ? $cipherMap[$algo]
             : $ciphers[0];
 
         // ── Widgets ──────────────────────────────────────────────────────────
@@ -224,6 +224,7 @@ final class CipherCommand
             $outputLabel,
             $keyInput,
             $stylesheet,
+            $container,
         ): void {
             if ('✓' === $e->getValue()) {
                 if ($activeCipher->getId() === $e->getId()) {
@@ -240,6 +241,7 @@ final class CipherCommand
                     $stylesheet->addRule('.cipher-key', new Style(direction: Direction::Vertical, hidden: true));
                     $encodedInput->setValue($activeCipher->encode($normalInput->getValue()));
                 }
+                $container->invalidate();
             } else {
                 // Prevent deselecting the currently active cipher
                 if ($activeCipher->getId() === $e->getId()) {
