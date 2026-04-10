@@ -4,10 +4,11 @@ namespace App\Command;
 
 use App\Converter\ConverterInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\Tui\Event\InputEvent;
 use Symfony\Component\Tui\Event\SettingChangeEvent;
 use Symfony\Component\Tui\Style\Align;
@@ -24,43 +25,67 @@ use Symfony\Component\Tui\Widget\InputWidget;
 use Symfony\Component\Tui\Widget\SettingItem;
 use Symfony\Component\Tui\Widget\SettingsListWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
-use Symfony\Contracts\Service\ServiceProviderInterface;
 
 #[AsCommand(name: 'app:converter', description: 'Interactive text converter (1337, Base64, ROT13, URL)')]
 final class ConverterCommand
 {
+    /** @var iterable<ConverterInterface> */
+    private iterable $converters;
+
     public function __construct(
-        #[AutowireLocator('app.converter')]
-        private readonly ServiceProviderInterface $converters,
+        #[AutowireIterator(ConverterInterface::class)]
+        iterable $converters,
     ) {
+        $this->converters = $converters;
     }
 
-    public function __invoke(InputInterface $input, OutputInterface $output): int
+    public function getConverterIds(): array
     {
-        /** @var ConverterInterface[] $converters */
-        $converters = [];
-        foreach ($this->converters->getProvidedServices() as $serviceId => $type) {
-            $converters[] = $this->converters->get($serviceId);
+        $ids = [];
+        foreach ($this->converters as $converter) {
+            $ids[] = $converter->getId();
         }
 
+        return $ids;
+    }
+
+    public function __invoke(
+        InputInterface $input,
+        OutputInterface $output,
+        #[Option(description: 'Pre-select a converter', suggestedValues: [self::class, 'getConverterIds'])]
+        ?string $converter = null,
+        #[Option(description: 'Default text to convert')]
+        ?string $text = null,
+    ): int {
+        /** @var ConverterInterface[] $converters */
+        $converters = [];
         /** @var array<string, ConverterInterface> $converterMap */
         $converterMap = [];
-        foreach ($converters as $c) {
+        foreach ($this->converters as $c) {
+            $converters[] = $c;
             $converterMap[$c->getId()] = $c;
         }
 
-        $activeConverter = $converters[0];
+        $activeConverter = isset($converter, $converterMap[$converter])
+            ? $converterMap[$converter]
+            : $converters[0];
 
         // ── Widgets ──────────────────────────────────────────────────────────
 
         $normalInput = (new InputWidget())->setPrompt(' ');
         $normalInput->addStyleClass('leet-input');
+        if (null !== $text) {
+            $normalInput->setValue($text);
+        }
 
         $outputLabel = new TextWidget('  '.$activeConverter->getName());
         $outputLabel->addStyleClass('leet-label');
 
         $encodedInput = (new InputWidget())->setPrompt(' ');
         $encodedInput->addStyleClass('leet-input');
+        if (null !== $text) {
+            $encodedInput->setValue($activeConverter->encode($text));
+        }
 
         $settingItems = array_map(
             static fn (ConverterInterface $c) => new SettingItem(
