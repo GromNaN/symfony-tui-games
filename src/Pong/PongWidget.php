@@ -55,8 +55,8 @@ class PongWidget extends AbstractWidget implements FocusableInterface
     protected static function getDefaultKeybindings(): array
     {
         return [
-            'p1_up' => ['w', 'z'],
-            'p1_down' => ['s'],
+            'p1_up' => [Key::shift(Key::UP), 'w', 'z'],
+            'p1_down' => [Key::shift(Key::DOWN), 's'],
             'p2_up' => [Key::UP],
             'p2_down' => [Key::DOWN],
             'pause' => ['p', Key::SPACE],
@@ -70,10 +70,10 @@ class PongWidget extends AbstractWidget implements FocusableInterface
         $kb = $this->getKeybindings();
 
         if ($kb->matches($data, 'p1_up')) {
-            $this->game->movePaddle1(1);
+            $this->game->movePaddle1(-1);
             $this->invalidate();
         } elseif ($kb->matches($data, 'p1_down')) {
-            $this->game->movePaddle1(-1);
+            $this->game->movePaddle1(1);
             $this->invalidate();
         } elseif ($kb->matches($data, 'p2_up')) {
             $this->game->movePaddle2(-1);
@@ -162,7 +162,7 @@ class PongWidget extends AbstractWidget implements FocusableInterface
             $left .= '  '.$style->apply(\sprintf('[P%d WINS]', $winner));
         }
 
-        $hint = 'W-Z/S ↑↓  P R Q';
+        $hint = 'Shift+↑↓ ↑↓  P R Q';
 
         $leftVisible = \sprintf('P1: %d │ P2: %d', $s1, $s2)
             .match ($state) {
