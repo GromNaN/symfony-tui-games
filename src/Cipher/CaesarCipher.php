@@ -48,6 +48,10 @@ final class CaesarCipher implements KeyedCipherInterface
 
     private function shift(string $text, int $shift): string
     {
+        if (13 === $shift) {
+            return str_rot13($text);
+        }
+
         $result = '';
         for ($i = 0, $len = \strlen($text); $i < $len; ++$i) {
             $c = $text[$i];

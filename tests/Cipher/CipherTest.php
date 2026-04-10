@@ -5,7 +5,6 @@ namespace App\Tests\Cipher;
 use App\Cipher\Base64Cipher;
 use App\Cipher\CaesarCipher;
 use App\Cipher\LeetCipher;
-use App\Cipher\Rot13Cipher;
 use App\Cipher\VigenereCipher;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -90,31 +89,6 @@ class CipherTest extends TestCase
         self::assertSame('hello', $c->decode($c->encode('hello')));
     }
 
-    // ── ROT13 ─────────────────────────────────────────────────────────────────
-
-    public static function rot13Provider(): array
-    {
-        return [
-            'lower' => ['hello', 'uryyb'],
-            'mixed case' => ['Hello World', 'Uryyb Jbeyq'],
-            'digits kept' => ['abc123', 'nop123'],
-            'empty' => ['', ''],
-        ];
-    }
-
-    #[DataProvider('rot13Provider')]
-    public function testRot13Encode(string $input, string $expected)
-    {
-        self::assertSame($expected, (new Rot13Cipher())->encode($input));
-    }
-
-    #[DataProvider('rot13Provider')]
-    public function testRot13Decode(string $expected, string $input)
-    {
-        // ROT13 is its own inverse: decode(encode(x)) == x
-        self::assertSame($expected, (new Rot13Cipher())->decode($input));
-    }
-
     // ── Caesar ───────────────────────────────────────────────────────────────
 
     public static function caesarEncodeProvider(): array
@@ -157,6 +131,14 @@ class CipherTest extends TestCase
         foreach (['1', '3', '13', '25'] as $key) {
             self::assertSame('Hello World', $c->decodeWithKey($c->encodeWithKey('Hello World', $key), $key));
         }
+    }
+
+    public function testCaesarShift13IsItsOwnInverse()
+    {
+        // Caesar(13) == ROT13: applying it twice returns the original
+        $c = new CaesarCipher();
+        $text = 'Hello World';
+        self::assertSame($text, $c->encodeWithKey($c->encodeWithKey($text, '13'), '13'));
     }
 
     // ── Vigenère ─────────────────────────────────────────────────────────────

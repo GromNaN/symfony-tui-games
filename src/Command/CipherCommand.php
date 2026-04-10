@@ -28,7 +28,7 @@ use Symfony\Component\Tui\Widget\SettingItem;
 use Symfony\Component\Tui\Widget\SettingsListWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
 
-#[AsCommand(name: 'app:cipher', description: '🕵️ Secret message encoder (Caesar, Vigenère, 1337, Base64, ROT13, URL)')]
+#[AsCommand(name: 'app:cipher', description: '🕵️ Secret message encoder (Caesar, Vigenère, 1337, Base64)')]
 final class CipherCommand
 {
     /** @var iterable<CipherInterface> */
@@ -225,7 +225,7 @@ final class CipherCommand
             $outputLabel,
             $keyInput,
             $stylesheet,
-            $container,
+            $keyContainer,
         ): void {
             if ('✓' === $e->getValue()) {
                 if ($activeCipher->getId() === $e->getId()) {
@@ -243,7 +243,7 @@ final class CipherCommand
                     $stylesheet->addRule('.cipher-key', new Style(direction: Direction::Vertical, hidden: true));
                     $encodedInput->setValue($activeCipher->encode($normalInput->getValue()));
                 }
-                $container->invalidate();
+                $keyContainer->invalidate();
             } else {
                 // Prevent deselecting the currently active cipher
                 if ($activeCipher->getId() === $e->getId()) {
