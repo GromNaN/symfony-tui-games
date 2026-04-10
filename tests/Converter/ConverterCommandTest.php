@@ -26,7 +26,7 @@ use Symfony\Component\Tui\Widget\TextWidget;
 
 class ConverterCommandTest extends TestCase
 {
-    public function testRenderMatchesSnapshot(): void
+    public function testRenderMatchesSnapshot()
     {
         $converters = [new LeetConverter(), new Base64Converter(), new Rot13Converter(), new UrlConverter()];
         $activeConverter = $converters[0];

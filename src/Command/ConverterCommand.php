@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Tui\Event\InputEvent;
 use Symfony\Component\Tui\Event\SettingChangeEvent;
-use Symfony\Component\Tui\Input\Key;
 use Symfony\Component\Tui\Style\Align;
 use Symfony\Component\Tui\Style\Border;
 use Symfony\Component\Tui\Style\BorderPattern;

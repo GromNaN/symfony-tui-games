@@ -492,12 +492,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/dependency-injection.git",
-                "reference": "ff4b5e5030cc0a61996b86cdb95672f52cdc01c3"
+                "reference": "35771bc8851c2d5b8d441d8f958c391edec3984f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/dependency-injection/zipball/ff4b5e5030cc0a61996b86cdb95672f52cdc01c3",
-                "reference": "ff4b5e5030cc0a61996b86cdb95672f52cdc01c3",
+                "url": "https://api.github.com/repos/symfony/dependency-injection/zipball/35771bc8851c2d5b8d441d8f958c391edec3984f",
+                "reference": "35771bc8851c2d5b8d441d8f958c391edec3984f",
                 "shasum": ""
             },
             "require": {
@@ -566,7 +566,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-09T03:33:11+00:00"
+            "time": "2026-04-09T14:59:11+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -804,12 +804,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "3b9b84150679f3245bb56e08642bec698c2afb5f"
+                "reference": "2c8e7a47bbc5f30f950c615f02fe341a05416c12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/3b9b84150679f3245bb56e08642bec698c2afb5f",
-                "reference": "3b9b84150679f3245bb56e08642bec698c2afb5f",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/2c8e7a47bbc5f30f950c615f02fe341a05416c12",
+                "reference": "2c8e7a47bbc5f30f950c615f02fe341a05416c12",
                 "shasum": ""
             },
             "require": {
@@ -868,7 +868,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-07T06:26:27+00:00"
+            "time": "2026-04-09T14:06:24+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
