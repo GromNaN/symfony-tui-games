@@ -18,9 +18,9 @@ class CipherTest extends TestCase
     public static function leetEncodeProvider(): array
     {
         return [
-            'letters'   => ['leet speak',           'l337 5p34k'],
-            'sentence'  => ['see you at the party', '533 y0u 47 7h3 p4r7y'],
-            'upper'     => ['LEET SPEAK',           'L337 5P34K'],
+            'letters' => ['leet speak',           'l337 5p34k'],
+            'sentence' => ['see you at the party', '533 y0u 47 7h3 p4r7y'],
+            'upper' => ['LEET SPEAK',           'L337 5P34K'],
             'no change' => ['xyz',                  'xyz'],
         ];
     }
@@ -34,8 +34,8 @@ class CipherTest extends TestCase
     public static function leetDecodeProvider(): array
     {
         return [
-            'digits'    => ['1337 5p34k',           'ieet speak'],
-            'sentence'  => ['533 y0u 47 7h3 p4r7y', 'see you at the party'],
+            'digits' => ['1337 5p34k',           'ieet speak'],
+            'sentence' => ['533 y0u 47 7h3 p4r7y', 'see you at the party'],
             'no change' => ['xyz',                   'xyz'],
         ];
     }
@@ -57,9 +57,9 @@ class CipherTest extends TestCase
     public static function base64EncodeProvider(): array
     {
         return [
-            'simple'      => ['hello',       'aGVsbG8='],
+            'simple' => ['hello',       'aGVsbG8='],
             'with spaces' => ['Hello World', 'SGVsbG8gV29ybGQ='],
-            'empty'       => ['',            ''],
+            'empty' => ['',            ''],
         ];
     }
 
@@ -72,10 +72,10 @@ class CipherTest extends TestCase
     public static function base64DecodeProvider(): array
     {
         return [
-            'simple'        => ['aGVsbG8=',           'hello'],
-            'with spaces'   => ['SGVsbG8gV29ybGQ=',   'Hello World'],
+            'simple' => ['aGVsbG8=',           'hello'],
+            'with spaces' => ['SGVsbG8gV29ybGQ=',   'Hello World'],
             'invalid input' => ['not-valid-base64!!!', 'not-valid-base64!!!'],
-            'empty'         => ['',                    ''],
+            'empty' => ['',                    ''],
         ];
     }
 
@@ -96,10 +96,10 @@ class CipherTest extends TestCase
     public static function rot13Provider(): array
     {
         return [
-            'lower'       => ['hello',       'uryyb'],
-            'mixed case'  => ['Hello World', 'Uryyb Jbeyq'],
+            'lower' => ['hello',       'uryyb'],
+            'mixed case' => ['Hello World', 'Uryyb Jbeyq'],
             'digits kept' => ['abc123',      'nop123'],
-            'empty'       => ['',            ''],
+            'empty' => ['',            ''],
         ];
     }
 
@@ -121,10 +121,10 @@ class CipherTest extends TestCase
     public static function urlEncodeProvider(): array
     {
         return [
-            'space'   => ['hello world',     'hello%20world'],
+            'space' => ['hello world',     'hello%20world'],
             'special' => ['foo=bar&baz=qux', 'foo%3Dbar%26baz%3Dqux'],
-            'slash'   => ['path/to/file',    'path%2Fto%2Ffile'],
-            'empty'   => ['',               ''],
+            'slash' => ['path/to/file',    'path%2Fto%2Ffile'],
+            'empty' => ['',               ''],
         ];
     }
 
@@ -137,9 +137,9 @@ class CipherTest extends TestCase
     public static function urlDecodeProvider(): array
     {
         return [
-            'space'   => ['hello%20world',         'hello world'],
+            'space' => ['hello%20world',         'hello world'],
             'special' => ['foo%3Dbar%26baz%3Dqux', 'foo=bar&baz=qux'],
-            'empty'   => ['',                      ''],
+            'empty' => ['',                      ''],
         ];
     }
 
@@ -161,13 +161,13 @@ class CipherTest extends TestCase
     public static function caesarEncodeProvider(): array
     {
         return [
-            'shift 1'             => ['abc',         '1',  'bcd'],
-            'shift 13'            => ['abc',         '13', 'nop'],
-            'ROT13 equiv'         => ['Hello World', '13', 'Uryyb Jbeyq'],
-            'wraps around'        => ['xyz',         '3',  'abc'],
-            'upper'               => ['ABC',         '1',  'BCD'],
+            'shift 1' => ['abc',         '1',  'bcd'],
+            'shift 13' => ['abc',         '13', 'nop'],
+            'ROT13 equiv' => ['Hello World', '13', 'Uryyb Jbeyq'],
+            'wraps around' => ['xyz',         '3',  'abc'],
+            'upper' => ['ABC',         '1',  'BCD'],
             'preserves non-alpha' => ['hello!',      '1',  'ifmmp!'],
-            'empty'               => ['',            '5',  ''],
+            'empty' => ['',            '5',  ''],
         ];
     }
 
@@ -180,9 +180,9 @@ class CipherTest extends TestCase
     public static function caesarDecodeProvider(): array
     {
         return [
-            'shift 1'  => ['bcd', '1',  'abc'],
+            'shift 1' => ['bcd', '1',  'abc'],
             'shift 13' => ['nop', '13', 'abc'],
-            'upper'    => ['BCD', '1',  'ABC'],
+            'upper' => ['BCD', '1',  'ABC'],
         ];
     }
 
@@ -205,11 +205,11 @@ class CipherTest extends TestCase
     public static function vigenereEncodeProvider(): array
     {
         return [
-            'classic'             => ['ATTACKATDAWN', 'LEMON', 'LXFOPVEFRNHR'],
-            'lower input'         => ['hello',        'key',   'rijvs'],
-            'mixed case'          => ['Hello',        'KEY',   'Rijvs'],
+            'classic' => ['ATTACKATDAWN', 'LEMON', 'LXFOPVEFRNHR'],
+            'lower input' => ['hello',        'key',   'rijvs'],
+            'mixed case' => ['Hello',        'KEY',   'Rijvs'],
             'preserves non-alpha' => ['hello world',  'key',   'rijvs uyvjn'],
-            'empty'               => ['',             'KEY',   ''],
+            'empty' => ['',             'KEY',   ''],
         ];
     }
 
@@ -222,7 +222,7 @@ class CipherTest extends TestCase
     public static function vigenereDecodeProvider(): array
     {
         return [
-            'classic'     => ['LXFOPVEFRNHR', 'LEMON', 'ATTACKATDAWN'],
+            'classic' => ['LXFOPVEFRNHR', 'LEMON', 'ATTACKATDAWN'],
             'lower input' => ['rijvs',        'key',   'hello'],
         ];
     }
