@@ -6,7 +6,6 @@ use App\Cipher\Base64Cipher;
 use App\Cipher\CaesarCipher;
 use App\Cipher\CipherInterface;
 use App\Cipher\LeetCipher;
-use App\Cipher\Rot13Cipher;
 use App\Cipher\VigenereCipher;
 use App\Command\CipherCommand;
 use PHPUnit\Framework\TestCase;
@@ -35,7 +34,7 @@ class CipherCommandTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$ciphers = [new CaesarCipher(), new VigenereCipher(), new LeetCipher(), new Base64Cipher(), new Rot13Cipher()];
+        self::$ciphers = [new CaesarCipher(), new VigenereCipher(), new LeetCipher(), new Base64Cipher()];
     }
 
     public function testGetCipherIds()
@@ -50,8 +49,8 @@ class CipherCommandTest extends TestCase
         self::assertContains('vigenere', $ids);
         self::assertContains('leet', $ids);
         self::assertContains('base64', $ids);
-        self::assertContains('rot13', $ids);
         self::assertNotContains('url', $ids);
+        self::assertNotContains('rot13', $ids);
     }
 
     public function testRenderMatchesSnapshot()
