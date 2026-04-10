@@ -23,6 +23,7 @@ class Kernel extends AbstractKernel
     {
         $container->services()
             ->load('App\\', __DIR__.'/')
+            ->exclude([__DIR__.'/Tui/functions.php'])
             ->autoconfigure()
             ->autowire();
 

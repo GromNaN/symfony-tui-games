@@ -31,6 +31,9 @@
         <include>
             <directory>src</directory>
         </include>
+        <exclude>
+            <file>src/Tui/functions.php</file>
+        </exclude>
 
         <deprecationTrigger>
             <function>trigger_deprecation</function>

@@ -22,11 +22,12 @@ use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Style\StyleSheet;
 use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
-use Symfony\Component\Tui\Widget\ContainerWidget;
-use Symfony\Component\Tui\Widget\InputWidget;
 use Symfony\Component\Tui\Widget\SettingItem;
 use Symfony\Component\Tui\Widget\SettingsListWidget;
-use Symfony\Component\Tui\Widget\TextWidget;
+
+use function App\Tui\box;
+use function App\Tui\input;
+use function App\Tui\text;
 
 #[AsCommand(name: 'app:cipher', description: '🕵️ Secret message encoder (Caesar, Vigenère, 1337, Base64)')]
 final class CipherCommand
@@ -75,31 +76,6 @@ final class CipherCommand
             ? $cipherMap[$algo]
             : $ciphers[0];
 
-        // ── Widgets ──────────────────────────────────────────────────────────
-
-        $keyLabel = new TextWidget('  Key');
-        $keyLabel->addStyleClass('cipher-label');
-
-        $keyInput = (new InputWidget())->setPrompt(' ');
-        $keyInput->addStyleClass('cipher-input');
-
-        $normalInput = (new InputWidget())->setPrompt(' ');
-        $normalInput->addStyleClass('cipher-input');
-        if (null !== $text) {
-            $normalInput->setValue($text);
-        }
-
-        $outputLabel = new TextWidget('  '.$activeCipher->getName());
-        $outputLabel->addStyleClass('cipher-label');
-
-        $encodedInput = (new InputWidget())->setPrompt(' ');
-        $encodedInput->addStyleClass('cipher-input');
-        if (null !== $text) {
-            $encodedInput->setValue($activeCipher instanceof KeyedCipherInterface
-                ? $activeCipher->encodeWithKey($text, $activeCipher->getDefaultKey())
-                : $activeCipher->encode($text));
-        }
-
         $settingItems = array_map(
             static fn (CipherInterface $c) => new SettingItem(
                 id: $c->getId(),
@@ -110,32 +86,15 @@ final class CipherCommand
             $ciphers,
         );
 
-        $settingsList = new SettingsListWidget($settingItems, maxVisible: \count($ciphers));
-        $settingsList->addStyleClass('cipher-settings');
-        $settingsList->focusItem($activeCipher->getId());
-
         // ── Layout ───────────────────────────────────────────────────────────
 
-        $normalLabel = new TextWidget('  Original text');
-        $normalLabel->addStyleClass('cipher-label');
+        $keyContainer = box('cipher-key')
+            ->add(
+                text('  Key', class: 'cipher-label'),
+                $keyInput = input(class: 'cipher-input', prompt: ' '),
+            );
 
-        $ciphersLabel = new TextWidget('  Ciphers');
-        $ciphersLabel->addStyleClass('cipher-label');
 
-        $keyContainer = new ContainerWidget();
-        $keyContainer->addStyleClass('cipher-key');
-        $keyContainer->add($keyLabel);
-        $keyContainer->add($keyInput);
-
-        $container = new ContainerWidget();
-        $container->addStyleClass('cipher');
-        $container->add($normalLabel);
-        $container->add($normalInput);
-        $container->add($outputLabel);
-        $container->add($encodedInput);
-        $container->add($ciphersLabel);
-        $container->add($settingsList);
-        $container->add($keyContainer);
 
         // ── Stylesheet ───────────────────────────────────────────────────────
 
@@ -166,7 +125,24 @@ final class CipherCommand
         // ── TUI ──────────────────────────────────────────────────────────────
 
         $tui = new Tui($stylesheet);
-        $tui->add($container);
+        $tui->add(box('cipher')
+                ->add(
+                    text('  Original text', 'cipher-label'),
+                    $normalInput = input('cipher-input')
+                        ->setPrompt(' ')
+                        ->setValue((string) $text),
+                    $outputLabel = text('  '.$activeCipher->getName(), 'cipher-label'),
+                    $encodedInput = input('cipher-input')->setPrompt(' ')
+                        ->setValue($activeCipher instanceof KeyedCipherInterface
+                            ? $activeCipher->encodeWithKey((string) $text, $activeCipher->getDefaultKey())
+                            : $activeCipher->encode((string) $text)),
+                    text('  Ciphers', 'cipher-label'),
+                    $settingsList = new SettingsListWidget($settingItems, maxVisible: \count($ciphers))
+                        ->addStyleClass('cipher-settings')
+                        ->focusItem($activeCipher->getId()),
+                    $keyContainer,
+                )
+            );
         $tui->setFocus($normalInput);
 
         // Show key panel if the initial cipher requires a key
