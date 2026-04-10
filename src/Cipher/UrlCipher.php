@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Converter;
+namespace App\Cipher;
 
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
 #[AsTaggedItem(priority: 10)]
-final class UrlConverter implements ConverterInterface
+final class UrlCipher implements CipherInterface
 {
     public function getId(): string
     {
