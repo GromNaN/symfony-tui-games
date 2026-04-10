@@ -6,6 +6,7 @@ use App\Converter\ConverterInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Completion\Suggestion;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
@@ -26,7 +27,7 @@ use Symfony\Component\Tui\Widget\SettingItem;
 use Symfony\Component\Tui\Widget\SettingsListWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
 
-#[AsCommand(name: 'app:converter', description: 'Interactive text converter (1337, Base64, ROT13, URL)')]
+#[AsCommand(name: 'app:cipher', description: 'Interactive text converter (1337, Base64, ROT13, URL)')]
 final class ConverterCommand
 {
     /** @var iterable<ConverterInterface> */
@@ -39,11 +40,14 @@ final class ConverterCommand
         $this->converters = $converters;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getConverterIds(): array
     {
         $ids = [];
         foreach ($this->converters as $converter) {
-            $ids[] = $converter->getId();
+            $ids[] = new Suggestion($converter->getId(), $converter->getName());
         }
 
         return $ids;
