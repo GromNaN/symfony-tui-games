@@ -4,7 +4,7 @@ namespace App\Converter;
 
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-#[AutoconfigureTag('app.converter')]
+#[AutoconfigureTag]
 interface ConverterInterface
 {
     public function getId(): string;
