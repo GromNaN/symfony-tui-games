@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Converter;
+namespace App\Cipher;
 
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag]
-interface ConverterInterface
+interface CipherInterface
 {
     public function getId(): string;
 

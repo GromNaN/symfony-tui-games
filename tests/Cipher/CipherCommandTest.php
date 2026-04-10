@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Tests\Converter;
+namespace App\Tests\Cipher;
 
-use App\Command\ConverterCommand;
-use App\Converter\Base64Converter;
-use App\Converter\ConverterInterface;
-use App\Converter\LeetConverter;
-use App\Converter\Rot13Converter;
-use App\Converter\UrlConverter;
+use App\Cipher\Base64Cipher;
+use App\Cipher\CipherInterface;
+use App\Cipher\LeetCipher;
+use App\Cipher\Rot13Cipher;
+use App\Cipher\UrlCipher;
+use App\Command\CipherCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Completion\Suggestion;
 use Symfony\Component\Tui\Ansi\AnsiUtils;
@@ -27,20 +27,20 @@ use Symfony\Component\Tui\Widget\SettingItem;
 use Symfony\Component\Tui\Widget\SettingsListWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
 
-class ConverterCommandTest extends TestCase
+class CipherCommandTest extends TestCase
 {
-    /** @var ConverterInterface[] */
-    private static array $converters;
+    /** @var CipherInterface[] */
+    private static array $ciphers;
 
     public static function setUpBeforeClass(): void
     {
-        self::$converters = [new LeetConverter(), new Base64Converter(), new Rot13Converter(), new UrlConverter()];
+        self::$ciphers = [new LeetCipher(), new Base64Cipher(), new Rot13Cipher(), new UrlCipher()];
     }
 
-    public function testGetConverterIds()
+    public function testGetCipherIds()
     {
-        $command = new ConverterCommand(self::$converters);
-        $suggestions = $command->getConverterIds();
+        $command = new CipherCommand(self::$ciphers);
+        $suggestions = $command->getCipherIds();
 
         self::assertCount(4, $suggestions);
         self::assertContainsOnlyInstancesOf(Suggestion::class, $suggestions);
@@ -54,7 +54,7 @@ class ConverterCommandTest extends TestCase
 
     public function testRenderMatchesSnapshot()
     {
-        $plain = $this->renderTui(activeConverter: self::$converters[0]);
+        $plain = $this->renderTui(activeCipher: self::$ciphers[0]);
 
         $snapshotFile = __DIR__.'/snapshots/render.txt';
         if (!file_exists($snapshotFile) || getenv('UPDATE_SNAPSHOTS')) {
@@ -67,9 +67,9 @@ class ConverterCommandTest extends TestCase
         $this->assertStringEqualsFile($snapshotFile, $plain);
     }
 
-    public function testRenderWithPreselectedConverter()
+    public function testRenderWithPreselectedCipher()
     {
-        $plain = $this->renderTui(activeConverter: new Base64Converter());
+        $plain = $this->renderTui(activeCipher: new Base64Cipher());
 
         $snapshotFile = __DIR__.'/snapshots/render_base64.txt';
         if (!file_exists($snapshotFile) || getenv('UPDATE_SNAPSHOTS')) {
@@ -84,7 +84,7 @@ class ConverterCommandTest extends TestCase
 
     public function testRenderWithDefaultText()
     {
-        $plain = $this->renderTui(activeConverter: self::$converters[0], text: 'hello');
+        $plain = $this->renderTui(activeCipher: self::$ciphers[0], text: 'hello');
 
         $snapshotFile = __DIR__.'/snapshots/render_with_text.txt';
         if (!file_exists($snapshotFile) || getenv('UPDATE_SNAPSHOTS')) {
@@ -97,49 +97,49 @@ class ConverterCommandTest extends TestCase
         $this->assertStringEqualsFile($snapshotFile, $plain);
     }
 
-    private function renderTui(ConverterInterface $activeConverter, ?string $text = null): string
+    private function renderTui(CipherInterface $activeCipher, ?string $text = null): string
     {
         $normalInput = (new InputWidget())->setPrompt(' ');
-        $normalInput->addStyleClass('leet-input');
+        $normalInput->addStyleClass('cipher-input');
         if (null !== $text) {
             $normalInput->setValue($text);
         }
 
-        $outputLabel = new TextWidget('  '.$activeConverter->getName());
-        $outputLabel->addStyleClass('leet-label');
+        $outputLabel = new TextWidget('  '.$activeCipher->getName());
+        $outputLabel->addStyleClass('cipher-label');
 
         $encodedInput = (new InputWidget())->setPrompt(' ');
-        $encodedInput->addStyleClass('leet-input');
+        $encodedInput->addStyleClass('cipher-input');
         if (null !== $text) {
-            $encodedInput->setValue($activeConverter->encode($text));
+            $encodedInput->setValue($activeCipher->encode($text));
         }
 
         $settingItems = array_map(
-            static fn (ConverterInterface $c) => new SettingItem(
+            static fn (CipherInterface $c) => new SettingItem(
                 id: $c->getId(),
                 label: $c->getName(),
-                currentValue: $c->getId() === $activeConverter->getId() ? '✓' : '○',
+                currentValue: $c->getId() === $activeCipher->getId() ? '✓' : '○',
                 values: ['✓', '○'],
             ),
-            self::$converters,
+            self::$ciphers,
         );
 
-        $settingsList = new SettingsListWidget($settingItems, maxVisible: \count(self::$converters));
-        $settingsList->addStyleClass('leet-settings');
+        $settingsList = new SettingsListWidget($settingItems, maxVisible: \count(self::$ciphers));
+        $settingsList->addStyleClass('cipher-settings');
 
         $normalLabel = new TextWidget('  Original text');
-        $normalLabel->addStyleClass('leet-label');
+        $normalLabel->addStyleClass('cipher-label');
 
-        $convertersLabel = new TextWidget('  Converters');
-        $convertersLabel->addStyleClass('leet-label');
+        $ciphersLabel = new TextWidget('  Ciphers');
+        $ciphersLabel->addStyleClass('cipher-label');
 
         $container = new ContainerWidget();
-        $container->addStyleClass('leet');
+        $container->addStyleClass('cipher');
         $container->add($normalLabel);
         $container->add($normalInput);
         $container->add($outputLabel);
         $container->add($encodedInput);
-        $container->add($convertersLabel);
+        $container->add($ciphersLabel);
         $container->add($settingsList);
 
         $panelBorder = Border::from([1], BorderPattern::ROUNDED, 'bright_black');
@@ -147,18 +147,18 @@ class ConverterCommandTest extends TestCase
 
         $stylesheet = new StyleSheet([
             ':root' => new Style(align: Align::Center, verticalAlign: VerticalAlign::Center),
-            '.leet' => new Style(
+            '.cipher' => new Style(
                 direction: Direction::Vertical,
                 maxColumns: 64,
                 border: Border::from([1], BorderPattern::ROUNDED, 'yellow'),
                 padding: Padding::from([0, 1]),
                 gap: 1,
             ),
-            '.leet-label' => new Style(bold: true, color: 'yellow'),
-            '.leet-input' => new Style(border: $panelBorder, padding: Padding::from([0, 1])),
-            '.leet-input:focus' => new Style(border: $panelBorderFocused),
-            '.leet-settings' => new Style(border: $panelBorder),
-            '.leet-settings:focus' => new Style(border: $panelBorderFocused),
+            '.cipher-label' => new Style(bold: true, color: 'yellow'),
+            '.cipher-input' => new Style(border: $panelBorder, padding: Padding::from([0, 1])),
+            '.cipher-input:focus' => new Style(border: $panelBorderFocused),
+            '.cipher-settings' => new Style(border: $panelBorder),
+            '.cipher-settings:focus' => new Style(border: $panelBorderFocused),
             SettingsListWidget::class.'::hint' => new Style(dim: true),
             SettingsListWidget::class.'::label-selected' => new Style(bold: true, color: 'bright_yellow'),
             SettingsListWidget::class.'::value-selected' => new Style(bold: true, color: 'bright_yellow'),

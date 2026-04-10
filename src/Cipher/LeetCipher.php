@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Converter;
+namespace App\Cipher;
 
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
 #[AsTaggedItem(priority: 40)]
-final class LeetConverter implements ConverterInterface
+final class LeetCipher implements CipherInterface
 {
     private const ENCODE = [
         'a' => '4', 'A' => '4',

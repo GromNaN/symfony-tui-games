@@ -1,29 +1,31 @@
 <?php
 
-namespace App\Converter;
+namespace App\Cipher;
 
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
-#[AsTaggedItem(priority: 20)]
-final class Rot13Converter implements ConverterInterface
+#[AsTaggedItem(priority: 30)]
+final class Base64Cipher implements CipherInterface
 {
     public function getId(): string
     {
-        return 'rot13';
+        return 'base64';
     }
 
     public function getName(): string
     {
-        return 'ROT13';
+        return 'Base64';
     }
 
     public function encode(string $text): string
     {
-        return str_rot13($text);
+        return base64_encode($text);
     }
 
     public function decode(string $text): string
     {
-        return str_rot13($text);
+        $decoded = base64_decode($text, strict: true);
+
+        return false !== $decoded ? $decoded : $text;
     }
 }
