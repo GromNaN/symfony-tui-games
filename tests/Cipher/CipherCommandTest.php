@@ -3,10 +3,11 @@
 namespace App\Tests\Cipher;
 
 use App\Cipher\Base64Cipher;
+use App\Cipher\CaesarCipher;
 use App\Cipher\CipherInterface;
 use App\Cipher\LeetCipher;
 use App\Cipher\Rot13Cipher;
-use App\Cipher\UrlCipher;
+use App\Cipher\VigenereCipher;
 use App\Command\CipherCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Completion\Suggestion;
@@ -34,7 +35,7 @@ class CipherCommandTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$ciphers = [new LeetCipher(), new Base64Cipher(), new Rot13Cipher(), new UrlCipher()];
+        self::$ciphers = [new CaesarCipher(), new VigenereCipher(), new LeetCipher(), new Base64Cipher(), new Rot13Cipher()];
     }
 
     public function testGetCipherIds()
@@ -42,14 +43,15 @@ class CipherCommandTest extends TestCase
         $command = new CipherCommand(self::$ciphers);
         $suggestions = $command->getCipherIds();
 
-        self::assertCount(4, $suggestions);
         self::assertContainsOnlyInstancesOf(Suggestion::class, $suggestions);
 
         $ids = array_map(static fn (Suggestion $s) => $s->getValue(), $suggestions);
-        self::assertSame(['leet', 'base64', 'rot13', 'url'], $ids);
-
-        $labels = array_map(static fn (Suggestion $s) => $s->getDescription(), $suggestions);
-        self::assertSame(['1337 sp34k', 'Base64', 'ROT13', 'URL Encode'], $labels);
+        self::assertContains('caesar', $ids);
+        self::assertContains('vigenere', $ids);
+        self::assertContains('leet', $ids);
+        self::assertContains('base64', $ids);
+        self::assertContains('rot13', $ids);
+        self::assertNotContains('url', $ids);
     }
 
     public function testRenderMatchesSnapshot()

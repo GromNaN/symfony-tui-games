@@ -112,6 +112,7 @@ final class CipherCommand
 
         $settingsList = new SettingsListWidget($settingItems, maxVisible: \count($ciphers));
         $settingsList->addStyleClass('cipher-settings');
+        $settingsList->focusItem($activeCipher->getId());
 
         // ── Layout ───────────────────────────────────────────────────────────
 
@@ -233,6 +234,7 @@ final class CipherCommand
                 $settingsList->updateValue($activeCipher->getId(), '○');
                 $activeCipher = $cipherMap[$e->getId()];
                 $outputLabel->setText('  '.$activeCipher->getName());
+                $settingsList->focusItem($activeCipher->getId());
                 if ($activeCipher instanceof KeyedCipherInterface) {
                     $keyInput->setValue($activeCipher->getDefaultKey());
                     $stylesheet->addRule('.cipher-key', new Style(direction: Direction::Vertical, hidden: false));
