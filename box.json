@@ -1,0 +1,27 @@
+{
+    "output": "games.phar",
+    "main": "bin/game",
+    "stub": true,
+    "intercept": true,
+    "compression": "GZ",
+    "directories": [
+        "src",
+        "vendor"
+    ],
+    "finder": [
+        {
+            "in": "vendor-src/symfony/tui/src/Symfony/Component/Tui",
+            "exclude": ["Tests"]
+        },
+        {
+            "in": "var/cache/prod",
+            "name": "*.php"
+        }
+    ],
+    "blacklist": [
+        "vendor/symfony/runtime",
+        "tests",
+        "demos",
+        "var/cache/prod/App_KernelProdDebugContainer.preload.php"
+    ]
+}

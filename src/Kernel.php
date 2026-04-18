@@ -10,7 +10,23 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 
 class Kernel extends AbstractKernel
 {
-    use KernelTrait;
+    use KernelTrait {
+        KernelTrait::getCacheDir as private traitGetCacheDir;
+    }
+
+    public function getProjectDir(): string
+    {
+        return defined('PHAR_RUNNING_DIR') ? \PHAR_RUNNING_DIR : parent::getProjectDir();
+    }
+
+    public function getCacheDir(): string
+    {
+        if ($phar = \Phar::running(false)) {
+            return 'phar://'.$phar.'/var/cache/'.$this->environment;
+        }
+
+        return $this->traitGetCacheDir();
+    }
 
     private function getBundlesDefinition(): array
     {

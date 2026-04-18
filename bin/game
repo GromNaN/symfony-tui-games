@@ -1,0 +1,18 @@
+#!/usr/bin/env php
+<?php
+
+use App\Kernel;
+use Symfony\Component\Console\Application;
+
+if (class_exists(\Phar::class) && \Phar::running(false)) {
+    define('PHAR_RUNNING_DIR', dirname(\Phar::running(false)));
+}
+
+require __DIR__.'/../vendor/autoload.php';
+
+$kernel = new Kernel('prod', false);
+$kernel->boot();
+
+$app = new Application('Symfony TUI Games', '1337', $kernel->getContainer());
+$app->setDefaultCommand('app:menu');
+$app->run();
