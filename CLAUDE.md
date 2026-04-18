@@ -1,8 +1,21 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 Terminal games showcase for the experimental `symfony/tui` component (PHP 8.4+).
 
 `symfony/tui` is **not on Packagist** — bundled in `vendor-src/symfony/tui/` (fabpot/symfony, branch `tui`). Do **not** run `composer update symfony/tui` without first updating the submodule. All other Symfony components are `8.1.*` from Packagist.
+
+After updating the submodule, run `composer dump-autoload` to regenerate the path-repository autoload mapping.
+
+## Commands
+
+```bash
+bin/console app:menu          # interactive game selection menu
+bin/console app:<game>        # run a specific game directly
+vendor/bin/phpunit            # run all tests
+UPDATE_SNAPSHOTS=1 vendor/bin/phpunit tests/<Game>/  # regenerate snapshots for one game
+```
 
 ## Architecture
 
@@ -33,8 +46,3 @@ Three layers per game:
 ## Tests
 
 Snapshot tests use `VirtualTerminal` + `AnsiUtils::stripAnsiCodes()` and store plain-text renders in `tests/<Game>/snapshots/`.
-
-```bash
-php vendor/bin/phpunit          # run all tests
-UPDATE_SNAPSHOTS=1 php vendor/bin/phpunit tests/Menu/  # regenerate snapshots
-```
