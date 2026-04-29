@@ -4,24 +4,26 @@
     "stub": true,
     "intercept": true,
     "compression": "GZ",
-    "directories": [
-        "src",
-        "vendor"
-    ],
+    "exclude-dev-files": false,
     "finder": [
         {
+            "in": "src",
+            "name": "*.php"
+        },
+        {
+            "in": "vendor",
+            "name": "*.php",
+            "exclude": ["symfony/runtime", "Tests", "tests"]
+        },
+        {
             "in": "vendor-src/symfony/tui/src/Symfony/Component/Tui",
+            "name": "*.php",
             "exclude": ["Tests"]
         },
         {
             "in": "var/cache/prod",
-            "name": "*.php"
+            "name": "*.php",
+            "notName": "*.preload.php"
         }
-    ],
-    "blacklist": [
-        "vendor/symfony/runtime",
-        "tests",
-        "demos",
-        "var/cache/prod/App_KernelProdDebugContainer.preload.php"
     ]
 }
