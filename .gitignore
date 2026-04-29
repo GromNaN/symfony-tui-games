@@ -4,3 +4,4 @@
 /.phpunit.cache/
 /.php-cs-fixer.cache
 .claude/settings.local.json
+*.phar

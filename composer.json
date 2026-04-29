@@ -21,6 +21,7 @@
         "symfony/tui": "*"
     },
     "require-dev": {
+        "humbug/box": "^4.6",
         "phpunit/phpunit": "^11.5"
     },
     "config": {
@@ -59,6 +60,10 @@
         ],
         "pre-update-cmd": [
             "git submodule update --init"
+        ],
+        "compile": [
+            "@php bin/game list --no-interaction",
+            "box compile"
         ]
     },
     "conflict": {
