@@ -114,17 +114,3 @@ UPDATE_SNAPSHOTS=1 php vendor/bin/phpunit tests/Menu/  # regenerate one suite
 ```
 
 When adding a new game, add a test in `tests/MyGame/MyGameWidgetTest.php` that covers at least the initial render. Use a fixed game state (via reflection if needed) for a deterministic snapshot.
-
----
-
-## Submodule dependencies
-
-`symfony/tui` is not on Packagist and is vendored via a Git submodule (`vendor-src/symfony/tui`, from `fabpot/symfony` branch `tui`), loaded via a `path` repository in `composer.json`.
-
-To update TUI to the latest commit:
-
-```bash
-git submodule update --remote vendor-src/symfony/tui
-git add vendor-src/symfony/tui
-git commit -m "Update symfony/tui submodule"
-```

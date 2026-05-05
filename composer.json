@@ -4,7 +4,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.4.1",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "symfony/clock": "^8.1",
@@ -46,14 +46,6 @@
         "symfony/polyfill-php82": "*",
         "symfony/polyfill-php83": "*",
         "symfony/polyfill-php84": "*"
-    },
-    "scripts": {
-        "pre-install-cmd": [
-            "git submodule update --init"
-        ],
-        "pre-update-cmd": [
-            "git submodule update --init"
-        ]
     },
     "conflict": {
         "symfony/symfony": "*"

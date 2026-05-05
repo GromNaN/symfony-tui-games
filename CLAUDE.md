@@ -4,10 +4,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Terminal games showcase for the experimental `symfony/tui` component (PHP 8.4+).
 
-`symfony/tui` is **not on Packagist** — bundled in `vendor-src/symfony/tui/` (fabpot/symfony, branch `tui`). Do **not** run `composer update symfony/tui` without first updating the submodule. All other Symfony components are `8.1.*` from Packagist.
-
-After updating the submodule, run `composer dump-autoload` to regenerate the path-repository autoload mapping.
-
 ## Commands
 
 ```bash

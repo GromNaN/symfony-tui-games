@@ -6,32 +6,26 @@ Each game deliberately exercises a different slice of the TUI API — styling,
 borders, compositing, keybindings, tick loops — so the project doubles as a
 living, playable reference for the component.
 
-> [!WARNING]
-> This project depends on **`symfony/tui`**, an experimental component not yet on Packagist.
-> It is tracked via `vendor-src/symfony/tui` (submodule of `fabpot/symfony` branch `tui`).
-> Follow the setup instructions below to get started.
+> [!NOTE]
+> This project depends on **`symfony/tui`** from Symfony `8.1-dev`.
 
 ---
 
 ## Requirements
 
-- PHP ≥ 8.4
+- PHP ≥ 8.4.1
 - Composer
-- Git
 
 ## Installation
 
 ```bash
-# Clone this repository with its submodule
-git clone --recurse-submodules https://github.com/GromNaN/symfony-tui-games.git symfony-tui-games
+# Clone this repository
+git clone https://github.com/GromNaN/symfony-tui-games.git symfony-tui-games
 cd symfony-tui-games
 
-# Install dependencies (symfony/tui is loaded from vendor-src/ via a path repository)
+# Install dependencies
 composer install
 ```
-
-> If you cloned without `--recurse-submodules`, run
-> `git submodule update --init` before `composer install`.
 
 ---
 
