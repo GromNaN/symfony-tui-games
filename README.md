@@ -6,11 +6,6 @@ Each game deliberately exercises a different slice of the TUI API — styling,
 borders, compositing, keybindings, tick loops — so the project doubles as a
 living, playable reference for the component.
 
-> [!NOTE]
-> This project depends on **`symfony/tui`** from Symfony `8.1-dev`.
-
----
-
 ## Requirements
 
 - PHP ≥ 8.4.1

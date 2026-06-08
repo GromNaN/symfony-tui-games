@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Terminal games showcase for the experimental `symfony/tui` component (PHP 8.4+).
+Terminal games showcase for the `symfony/tui` component (PHP 8.4+).
 
 ## Commands
 
